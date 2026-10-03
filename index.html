@@ -14,9 +14,9 @@ button.on,button.pri{background:var(--pr);color:#fff;border-color:var(--pr)}
 main{padding:16px;max-width:1200px;margin:auto}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:14px}
 .grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
-.kpis{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:14px}
-.kpi b{font-size:24px;display:block}.kpi span,.mu{color:var(--mu);font-size:12px}
-h3{margin:0 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.03em;color:var(--mu)}
+.kpis{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));margin-bottom:14px}.kpi{min-width:0;overflow:hidden}
+.kpi b{font-size:clamp(18px,2vw,24px);line-height:1.25;display:block;overflow-wrap:anywhere}.kpi span,.mu{color:var(--mu);font-size:12px}
+h3{overflow-wrap:anywhere;margin:0 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.03em;color:var(--mu)}
 .cv{position:relative;height:240px}
 table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--bd);vertical-align:top}th{font-size:12px;color:var(--mu)}
 tr.cl{cursor:pointer}tr.cl:hover{background:var(--bg)}
@@ -37,7 +37,7 @@ body.ro .ctl{display:none}a.chip{color:var(--tx);text-decoration:none}
 .inv0{color:var(--mu)}.inv1{color:var(--wa)}.inv2{color:var(--ok)}
 </style>
 <script src="https://accounts.google.com/gsi/client" async defer></script></head><body>
-<header><h1>Portal Insiden & RTP <small>PT. Dizamatra Powerindo – Lahat</small></h1>
+<header><h1>Portal Rekapitulasi Insiden & Rencana Tindak lanjut Perbaikan <small>Priamanaya Group – Site Lahat</small></h1>
 <nav id="nav"></nav></header><main id="app"></main><div id="st" onclick="flush()"></div><div id="lb" onclick="this.style.display='none'"><img id="lbi"></div>
 <script>
 const RC=[["Pelaksanaan Prosedur/Kebijakan","UA"],["Penggunaan Peralatan","UA"],["Metode Perlindungan (APD)","UA"],["Tidak Memperhatikan/Menyadari","UA"],["Sistem Pengaman Tidak Memadai","UC"],["Perkakas/Peralatan Tidak Aman","UC"],["Pemaparan Kondisi Kesehatan","UC"],["Lingkungan Kerja Tidak Aman","UC"],["Ketidakmampuan Fisik","HF"],["Stress Fisik","HF"],["Ketidakmampuan Mental","HF"],["Stress Mental","HF"],["Tingkat Keterampilan","HF"],["Perilaku/Kurang Motivasi","HF"],["Kurang Pelatihan","JF"],["Supervisi Tidak Memadai","JF"],["Seleksi & Pengawasan Kontraktor","JF"],["Rekayasa Desain","JF"],["Rencana Pemeliharaan","JF"],["Pembelian & Kendali Bahan","JF"],["Perkakas/Peralatan Tidak Memadai","JF"],["Peraturan/Prosedur Kerja","JF"],["Komunikasi Tidak Memadai","JF"]];
@@ -49,18 +49,42 @@ const JNS=["Menabrak/Ditabrak","Jatuh Pada Permukaan Yang Sama","Tenggelam, Terp
 const INV=["Belum Dimulai","Sedang Investigasi","Selesai"],invOf=i=>INV.includes(i.invStatus)?i.invStatus:INV[0],invCls=i=>"inv"+INV.indexOf(invOf(i));
 const HRS=[...Array(24)].map((_,i)=>{const p=n=>String(n).padStart(2,"0");return `${p(i)}:01 - ${p(i+1)}:00`});
 const MON=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
-let V={p:"dash",id:null,co:"",q:"",m:"",rs:"",y:"",st:"",iv:""},CH=[];
+let V={p:"dash",id:null,co:"",q:"",m:"",rs:"",y:"",st:"",iv:"",pm:"both"},CH=[];
 const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const cnt=(a,f)=>{const m={};a.forEach(x=>{const k=f(x);if(k)m[k]=(m[k]||0)+1});return Object.entries(m).sort((a,b)=>b[1]-a[1])};
 const rp=i=>S.rtp.filter(r=>r.incId===i), idr=n=>n.toLocaleString("id-ID");
 function go(p,id){V.p=p;if(p=="form")V.ed=null;if(id!==undefined)V.id=id;render();scrollTo(0,0)}
-function chart(id,type,labels,data,opt={}){const el=document.getElementById(id);if(!el||!window.Chart)return;
-CH.push(new Chart(el,{type,data:{labels,datasets:[{data,backgroundColor:type=="bar"||type=="line"?"#c2410c":["#c2410c","#0e7490","#6d28d9","#ca8a04","#16a34a","#db2777","#475569"],borderColor:"#c2410c",tension:.3}]},options:{indexAxis:opt.h?"y":"x",maintainAspectRatio:false,plugins:{legend:{display:type=="doughnut"}},scales:type=="doughnut"?{}:{x:{ticks:{autoSkip:false,font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0}}}}}))}
+const pct=(n,t)=>(t?n/t*100:0).toFixed(1).replace(/\.0$/,"").replace(".",",")+"%";
+const idrs=n=>n>=1e9?(n/1e9).toFixed(2).replace(".",",")+" M":n>=1e6?(n/1e6).toFixed(1).replace(".",",")+" jt":idr(n);
+function wrap(s,n){s=String(s);if(s.length<=n)return s;const o=[];let l="";s.split(" ").forEach(w=>{if(l&&(l+" "+w).length>n){o.push(l);l=w}else l=l?l+" "+w:w});if(l)o.push(l);return o.length>1?o:o[0]}
+const CV=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+function theme(){if(!window.Chart)return;Chart.defaults.color=CV("--mu")||"#667085";Chart.defaults.borderColor=CV("--bd")||"#e3e6eb";Chart.defaults.font.family="system-ui,-apple-system,'Segoe UI',sans-serif"}
+/* label nilai (jumlah / persentase) digambar langsung di grafik, tanpa plugin tambahan */
+const valLabels={id:"valLabels",afterDatasetsDraw(c,_,o){if(!o||!o.on)return;
+const ds=c.data.datasets[0],m=c.getDatasetMeta(0),x=c.ctx,t=o.total,md=V.pm||"both",dn=c.config.type=="doughnut",hz=c.options.indexAxis=="y";
+x.save();x.fillStyle=dn?"#fff":o.color;x.font=(dn?"600 11px ":"10px ")+"system-ui,sans-serif";
+m.data.forEach((el,i)=>{const v=+ds.data[i];if(!v)return;const p=pct(v,t);
+if(dn){if(!c.getDataVisibility(i)||v/t<.06)return;const q=el.tooltipPosition();x.textAlign="center";x.textBaseline="middle";x.fillText(md=="n"?String(v):p,q.x,q.y);return}
+if(hz){x.textAlign="left";x.textBaseline="middle";x.fillText(md=="p"?p:md=="n"?String(v):v+" ("+p+")",el.x+5,el.y);return}
+x.textAlign="center";x.textBaseline="bottom";
+if(md=="both"&&o.two){x.fillText(p,el.x,el.y-3);x.fillText(String(v),el.x,el.y-14)}else x.fillText(md=="p"?p:md=="n"?String(v):v+" ("+p+")",el.x,el.y-3)})
+x.restore()}};
+function chart(id,type,labels,data,opt={}){const el=document.getElementById(id);if(!el||!window.Chart)return;theme();
+const hz=!!opt.h,dn=type=="doughnut",T=opt.total||data.reduce((a,b)=>a+(+b||0),0),cat=hz?"y":"x",val=hz?"x":"y",
+disp=dn?labels:labels.map(l=>wrap(l,hz?24:12)),box=el.parentElement,cur=parseInt(box.style.height)||240;
+if(hz){const L=disp.reduce((a,l)=>a+(Array.isArray(l)?l.length:1),0);box.style.height=Math.min(800,Math.max(cur,L*14+labels.length*8+50))+"px"}
+else if(dn)box.style.height=Math.max(cur,300)+"px";
+CH.push(new Chart(el,{type,plugins:[valLabels],data:{labels:disp,datasets:[{data,backgroundColor:type=="bar"||type=="line"?"#c2410c":["#c2410c","#0e7490","#6d28d9","#ca8a04","#16a34a","#db2777","#475569"],borderColor:dn?CV("--card")||"#fff":"#c2410c",borderWidth:dn?2:1,borderRadius:dn?0:4,maxBarThickness:38,tension:.3}]},
+options:{indexAxis:hz?"y":"x",maintainAspectRatio:false,layout:{padding:{right:4,top:4}},
+plugins:{valLabels:{on:type!="line",total:T,color:CV("--tx")||"#1b2430",two:!hz&&!dn&&labels.length>8},
+legend:{display:dn,position:"bottom",labels:{boxWidth:12,padding:10,font:{size:11},generateLabels:c=>labels.map((l,i)=>({text:l+": "+data[i]+" ("+pct(data[i],T)+")",fillStyle:c.data.datasets[0].backgroundColor[i%7],strokeStyle:c.data.datasets[0].backgroundColor[i%7],lineWidth:0,hidden:!c.getDataVisibility(i),index:i,fontColor:CV("--mu")}))}},
+tooltip:{callbacks:{title:i=>labels[i[0].dataIndex],label:c=>" "+c.raw+(opt.unit?" "+opt.unit:"")+" ("+pct(c.raw,T)+")"}}},
+scales:dn?{}:{[cat]:{grid:{display:false},ticks:{autoSkip:false,font:{size:hz?11:10}}},[val]:{beginAtZero:true,grace:hz?"28%":"22%",ticks:{precision:0}}}}}))}
 function cardChart(t,id,h){return `<div class="card"><h3>${t}</h3><div class="cv" style="height:${h||240}px"><canvas id="${id}"></canvas></div></div>`}
 function dash(){const d=F(),n=d.length,r=S.rtp.filter(x=>d.some(i=>i.id==x.incId));
 const dn=r.filter(x=>x.status=="Done").length,cost=d.reduce((a,i)=>a+(+i.cost||0),0),c=k=>d.filter(i=>i.cls==k).length;
-$("#app").innerHTML=`<div class="row">${selY()}${selC()}${selS()}${selI()}</div>
-<div class="kpis"><div class="card kpi"><b>${n}</b><span>Total insiden</span></div><div class="card kpi"><b>${c("Nearmiss")}</b><span>Nearmiss</span></div><div class="card kpi"><b>${c("Property Damage")}</b><span>Property Damage</span></div><div class="card kpi"><b>${c("First Aid")}</b><span>First Aid</span></div><div class="card kpi"><b>Rp ${idr(cost)}</b><span>Estimasi biaya</span></div><div class="card kpi"><b>${d.filter(i=>stOf(i)=="Closed").length}/${n}</b><span>Insiden closed</span></div><div class="card kpi"><b>${d.filter(i=>invOf(i)==INV[2]).length}/${n}</b><span>Investigasi selesai</span></div><div class="card kpi"><b>${d.reduce((a,i)=>a+(+i.dlMan||0),0)} / ${d.reduce((a,i)=>a+(+i.dlUnit||0),0)}</b><span>Daylost man / unit</span></div><div class="card kpi"><b>${r.length?Math.round(dn/r.length*100):0}%</b><span>RTP selesai (${dn}/${r.length})</span></div></div>
+$("#app").innerHTML=`<div class="row">${selY()}${selC()}${selS()}${selI()}${selP()}</div>
+<div class="kpis"><div class="card kpi"><b>${n}</b><span>Total insiden</span></div><div class="card kpi"><b>${c("Nearmiss")}</b><span>Nearmiss (${pct(c("Nearmiss"),n)})</span></div><div class="card kpi"><b>${c("Property Damage")}</b><span>Property Damage (${pct(c("Property Damage"),n)})</span></div><div class="card kpi"><b>${c("First Aid")}</b><span>First Aid (${pct(c("First Aid"),n)})</span></div><div class="card kpi"><b title="Rp ${idr(cost)}">Rp ${idrs(cost)}</b><span>Estimasi biaya · Rp ${idr(cost)}</span></div><div class="card kpi"><b>${d.filter(i=>stOf(i)=="Closed").length}/${n}</b><span>Insiden closed (${pct(d.filter(i=>stOf(i)=="Closed").length,n)})</span></div><div class="card kpi"><b>${d.filter(i=>invOf(i)==INV[2]).length}/${n}</b><span>Investigasi selesai (${pct(d.filter(i=>invOf(i)==INV[2]).length,n)})</span></div><div class="card kpi"><b>${d.reduce((a,i)=>a+(+i.dlMan||0),0)} / ${d.reduce((a,i)=>a+(+i.dlUnit||0),0)}</b><span>Daylost man / unit</span></div><div class="card kpi"><b>${r.length?Math.round(dn/r.length*100):0}%</b><span>RTP selesai (${dn}/${r.length})</span></div></div>
 <div class="grid">${cardChart("Jumlah per tahun","c0")}${cardChart("Tren per bulan (per tahun)","c1")}${cardChart("Berdasarkan perusahaan","c2")}${cardChart("Klasifikasi insiden","c3")}${cardChart("Jenis insiden","c4",280)}${cardChart("Waktu kejadian","c5")}${cardChart("Shift","c6")}${cardChart("Departemen","c7")}${cardChart("Tempat kejadian","c8",280)}${cardChart("Unit terlibat","c9",280)}${cardChart("Hari kejadian (hari ke-)","c10")}${cardChart("Jabatan","c11",280)}${cardChart("Lama kerja","c12")}${cardChart("Umur karyawan","c13")}${cardChart("Umur SIMPER","c14")}${cardChart("Tipe SIMPER","c15")}${cardChart("Bagian yang luka","c16",280)}${cardChart("Kondisi fatigue","c17")}${cardChart("Living status","c18")}${cardChart("Status investigasi","c19")}</div>`;
 const g=(f,id,t="bar",o)=>{const e=cnt(d,f);chart(id,t,e.map(x=>x[0]),e.map(x=>x[1]),o)};
 {const ys=[...new Set(d.map(yr))].sort(),pal=["#c2410c","#0e7490","#6d28d9","#ca8a04","#16a34a"];
@@ -94,9 +118,9 @@ function note(id,t){if(!t.trim())return;const r=S.rtp.find(x=>x.id==id);r.log.pu
 function del(id){if(confirm("Hapus RTP ini?")){S.rtp=S.rtp.filter(x=>x.id!=id);save();render()}}
 function lb(s){$("#lbi").src=s;$("#lb").style.display="flex"}
 function rca(){const d=F(),c=RC.map((r,x)=>d.filter(i=>i.rc.includes(x)).length);
-$("#app").innerHTML=`<div class="row">${selY()}${selC()}${selS()}${selI()}</div><div class="grid">${cardChart("Root cause – ringkasan 4 kelompok","r0")}${Object.keys(GRP).map(g=>cardChart(GRP[g],"r"+g,300)).join("")}</div>`;
+$("#app").innerHTML=`<div class="row">${selY()}${selC()}${selS()}${selI()}${selP()}</div><div class="grid">${cardChart("Root cause – ringkasan 4 kelompok (% dari total penyebab)","r0")}${Object.keys(GRP).map(g=>cardChart(GRP[g]+" (% dari "+d.length+" insiden)","r"+g,300)).join("")}</div>`;
 chart("r0","bar",Object.values(GRP),Object.keys(GRP).map(g=>RC.reduce((a,r,x)=>a+(r[1]==g?c[x]:0),0)));
-Object.keys(GRP).forEach(g=>{const e=RC.map((r,x)=>[r[0],c[x]]).filter((_,x)=>RC[x][1]==g);chart("r"+g,"bar",e.map(x=>x[0]),e.map(x=>x[1]),{h:1})})}
+Object.keys(GRP).forEach(g=>{const e=RC.map((r,x)=>[r[0],c[x]]).filter((_,x)=>RC[x][1]==g).sort((a,b)=>b[1]-a[1]);chart("r"+g,"bar",e.map(x=>x[0]),e.map(x=>x[1]),{h:1,total:d.length,unit:"insiden"})})}
 function rtpAll(){const A=S.rtp.filter(r=>(!V.rs||r.status==V.rs)&&(!V.y||yr(S.inc.find(i=>i.id==r.incId)||{})==V.y));
 $("#app").innerHTML=`<div class="row">${selY()}<select onchange="V.rs=this.value;render()"><option value="">Semua status</option><option value="Open">Open</option><option value="Progress">Dalam proses</option><option value="Done">Selesai</option></select><span class="mu">${A.length} RTP</span></div>${A.map(r=>{const i=S.inc.find(x=>x.id==r.incId)||{};return `<div><a href="#" onclick="go('detail','${i.id}');return false" style="color:var(--pr)">${esc(i.ir)} – ${esc(i.title)}</a>${rtpCard(r)}</div>`}).join("")||'<div class="card mu">Belum ada RTP. Buka sebuah insiden dari Daftar Insiden untuk menambahkannya.</div>'}`}
 
@@ -142,7 +166,7 @@ const yr=i=>String(i.date||"").slice(0,4),stOf=i=>i.status||"Open",today=()=>new
 const years=()=>[...new Set(S.inc.map(yr).filter(Boolean))].sort().reverse();
 const F=()=>S.inc.filter(i=>(!V.y||yr(i)==V.y)&&(!V.co||i.co==V.co)&&(!V.st||stOf(i)==V.st)&&(!V.iv||invOf(i)==V.iv));
 const sel=(k,all,o)=>`<select onchange="V.${k}=this.value;render()"><option value="">${all}</option>${o.map(([v,l])=>`<option value="${esc(v)}" ${V[k]==v?"selected":""}>${esc(l)}</option>`).join("")}</select>`;
-const selY=()=>sel("y","Semua tahun",years().map(y=>[y,y])),selC=()=>sel("co","Semua perusahaan",COMP.map(c=>[c,c])),selS=()=>sel("st","Semua status",[["Open","Open"],["Closed","Closed"]]),selI=()=>sel("iv","Semua investigasi",INV.map(x=>[x,x]));
+const selY=()=>sel("y","Semua tahun",years().map(y=>[y,y])),selC=()=>sel("co","Semua perusahaan",COMP.map(c=>[c,c])),selS=()=>sel("st","Semua status",[["Open","Open"],["Closed","Closed"]]),selI=()=>sel("iv","Semua investigasi",INV.map(x=>[x,x])),selP=()=>`<select onchange="V.pm=this.value;render()" title="Label pada grafik">${[["both","Label: jumlah & %"],["n","Label: jumlah"],["p","Label: persentase"]].map(([v,l])=>`<option value="${v}" ${V.pm==v?"selected":""}>${l}</option>`).join("")}</select>`;
 function closeCard(i){const R=rp(i.id),miss=[];if(!R.length)miss.push("Belum ada RTP");R.forEach(r=>{if(r.status!="Done")miss.push(`RTP "${r.action}" belum selesai`);else if(!r.ev.length)miss.push(`RTP "${r.action}" belum ada bukti`)});
 if(stOf(i)=="Closed")return `<div class="card"><h3>Status insiden</h3><span class="tag Closed">CLOSED</span> ${esc(i.closeDate)} · oleh ${esc(i.closeBy)}<p>${esc(i.closeNote)||"-"}</p><button onclick="reopen('${i.id}')">Buka kembali (reopen)</button></div>`;
 return `<div class="card"><h3>Status insiden</h3><span class="tag Open">OPEN</span>${miss.length?`<ul class="mu">${miss.map(m=>`<li>${esc(m)}</li>`).join("")}</ul><p class="mu">Closing aktif setelah semua RTP selesai dan memiliki bukti.</p>`:`<form onsubmit="return closeInc(event,'${i.id}')" class="f" style="margin-top:8px"><div><label>Tanggal closing</label><input type="date" name="d" value="${today()}" required></div><div><label>Ditutup oleh</label><input name="by" required></div><div style="grid-column:1/-1"><label>Catatan penutupan</label><textarea name="n" rows="2"></textarea></div><div><button class="pri">Closing insiden</button></div></form>`}</div>`}
@@ -164,7 +188,7 @@ function logout(){TOKEN="";sessionStorage.removeItem("tk");ME=null;login()}
 async function start(){$("#app").innerHTML='<p class="mu">Memuat data…</p>';try{S=await api("getAll");S.inc.forEach(i=>{if(!i.mon&&i.date)i.mon=MON[+i.date.slice(5,7)-1]||""});snap();if(!V.y)V.y=years()[0]||"";render()}catch(e){if(e.message!="AUTH")$("#app").innerHTML='<div class="card">'+esc(e.message=="FORBIDDEN"?"Email Anda belum terdaftar di portal. Hubungi admin HSE.":e.message)+'</div>'}}
 function nav(){if(!ME){$("#nav").innerHTML="";return}const t=[["dash","Dashboard"],["list","Daftar Insiden"],...(ME.role=="admin"?[["form","+ Input Resume"]]:[]),["rca","Root Cause"],["rtp","RTP & Bukti"]];
 $("#nav").innerHTML=t.map(([k,l])=>`<button class="${V.p==k?"on":""}" onclick="go('${k}')">${l}</button>`).join("")+(OPEN_ACCESS?"":`<button onclick="logout()" style="margin-left:auto">Keluar (${esc(ME.email)})</button>`)}
-function render(){CH.forEach(c=>c.destroy());CH=[];nav();({dash,list,form,detail,rca,rtp:rtpAll})[V.p]();document.body.classList.toggle("ro",ME.role=="viewer");
+function render(){CH.forEach(c=>c.destroy());CH=[];theme();nav();({dash,list,form,detail,rca,rtp:rtpAll})[V.p]();document.body.classList.toggle("ro",ME.role=="viewer");
 if(ME.role!="admin"){document.querySelectorAll(".rc input").forEach(x=>x.disabled=true);document.querySelectorAll("#app form").forEach(f=>f.style.display="none")}}
 window.onload=()=>OPEN_ACCESS||TOKEN?start():login();
 </script></body></html>
