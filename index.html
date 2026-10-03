@@ -100,7 +100,7 @@ $("#app").innerHTML=`<div class="row">${selY()}<select onchange="V.rs=this.value
 
 /* ===== KONFIGURASI: isi dua nilai ini ===== */
 const OPEN_ACCESS=true; /* true = tanpa login (sementara). false = wajib login Google */
-const API_URL="GANTI_DENGAN_URL_WEB_APP_/exec",CLIENT_ID="GANTI_DENGAN_CLIENT_ID.apps.googleusercontent.com";
+const API_URL="https://script.google.com/macros/s/AKfycbzGzLNBM9Vp8AABYMtpvY9TT8MTAJZokrCmA7KUeNCkrAXPbOoqqTp4_oV024HMhE9E/exec",CLIENT_ID="GANTI_DENGAN_CLIENT_ID.apps.googleusercontent.com";
 /* ===== Koneksi ke Apps Script ===== */
 let S={inc:[],rtp:[]},ME=null,TOKEN=sessionStorage.getItem("tk")||"",SNAP={};
 const TH=(id,w)=>`https://drive.google.com/thumbnail?id=${id}&sz=w${w}`;
