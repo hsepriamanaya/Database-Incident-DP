@@ -36,7 +36,7 @@ body.ro .ctl{display:none}a.chip{color:var(--tx);text-decoration:none}
 .Closed{color:var(--ok)}#st{position:fixed;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));background:var(--card);border:1px solid var(--bd);padding:6px 12px;border-radius:8px;display:none;z-index:8}#st.bad{border-color:var(--er);color:var(--er);cursor:pointer}
 .inv0{color:var(--mu)}.inv1{color:var(--wa)}.inv2{color:var(--ok)}
 </style>
-<script src="https://accounts.google.com/gsi/client" async defer></script></head><body>
+</head><body>
 <header><h1>Portal Rekapitulasi Insiden & Monitoring RTP Insiden <small>PT. Dizamatra Powerindo – Lahat</small></h1>
 <nav id="nav"></nav></header><main id="app"></main><div id="st" onclick="flush()"></div><div id="lb" onclick="this.style.display='none'"><img id="lbi"></div>
 <script>
@@ -129,24 +129,23 @@ Object.keys(GRP).forEach(g=>{const e=RC.map((r,x)=>[r[0],c[x]]).filter((_,x)=>RC
 function rtpAll(){const A=S.rtp.filter(r=>(!V.rs||r.status==V.rs)&&(!V.y||yr(S.inc.find(i=>i.id==r.incId)||{})==V.y));
 $("#app").innerHTML=`<div class="row">${selY()}<select onchange="V.rs=this.value;render()"><option value="">Semua status</option><option value="Open">Open</option><option value="Progress">Dalam proses</option><option value="Done">Selesai</option></select><span class="mu">${A.length} RTP</span></div>${A.map(r=>{const i=S.inc.find(x=>x.id==r.incId)||{};return `<div><a href="#" onclick="go('detail','${i.id}');return false" style="color:var(--pr)">${esc(i.ir)} – ${esc(i.title)}</a>${rtpCard(r)}</div>`}).join("")||'<div class="card mu">Belum ada RTP. Buka sebuah insiden dari Daftar Insiden untuk menambahkannya.</div>'}`}
 
-/* ===== KONFIGURASI: isi dua nilai ini ===== */
-const OPEN_ACCESS=true; /* true = tanpa login (sementara). false = wajib login Google */
-const API_URL="https://script.google.com/macros/s/AKfycbzGzLNBM9Vp8AABYMtpvY9TT8MTAJZokrCmA7KUeNCkrAXPbOoqqTp4_oV024HMhE9E/exec",CLIENT_ID="GANTI_DENGAN_CLIENT_ID.apps.googleusercontent.com";
-/* ===== Koneksi ke Apps Script ===== */
-let S={inc:[],rtp:[]},ME=null,TOKEN=sessionStorage.getItem("tk")||"",SNAP={};
+/* ===== Konfigurasi Backend API ===== */
+const API_URL="https://script.google.com/macros/s/AKfycbzGzLNBM9Vp8AABYMtpvY9TT8MTAJZokrCmA7KUeNCkrAXPbOoqqTp4_oV024HMhE9E/exec";
+let S={inc:[],rtp:[]},ME=null,SNAP={};
 const TH=(id,w)=>`https://drive.google.com/thumbnail?id=${id}&sz=w${w}`;
-async function api(action,data){let r;try{r=JSON.parse(await(await fetch(API_URL,{method:"POST",body:JSON.stringify({action,token:TOKEN,data})})).text())}catch(e){throw Object.assign(new Error("Tidak bisa terhubung ke server (koneksi putus, atau Apps Script mengembalikan error – cek menu Executions)"),{net:1})}
-if(!r.ok){if(r.error=="AUTH")logout();throw new Error(r.error)}ME=r.user;return r.data}
+
+async function api(action,data){let r;try{r=JSON.parse(await(await fetch(API_URL,{method:"POST",body:JSON.stringify({action,data})})).text())}catch(e){throw Object.assign(new Error("Tidak bisa terhubung ke server (koneksi putus, atau Apps Script mengembalikan error)"),{net:1})}
+if(!r.ok){throw new Error(r.error)}ME=r.user;return r.data}
+
 const snap=()=>{SNAP={};[...S.inc,...S.rtp].forEach(x=>SNAP[x.id]=JSON.stringify(x))};
 function upl(id,fs){const r=S.rtp.find(x=>x.id==id);let n=fs.length,ok=0;
 const fin=()=>{if(!--n){if(ok)r.log.push(`${new Date().toLocaleDateString("id-ID")}: ${ok} bukti ditambahkan`);save();render()}};
 [...fs].forEach(f=>{const send=(b,t)=>enq(()=>api("upload",{incId:r.incId,rtpId:r.id,name:f.name,type:t,b64:b})).then(x=>{r.ev.push(x);ok++;fin()}).catch(e=>{alert(f.name+": "+e.message);fin()});
 const rd=new FileReader();rd.onload=()=>{if(f.type.startsWith("image")){const im=new Image();im.onload=()=>{const k=Math.min(1,1600/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;c.getContext("2d").drawImage(im,0,0,c.width,c.height);send(c.toDataURL("image/jpeg",.8).split(",")[1],"image/jpeg")};im.src=rd.result}else if(f.size>5e6){alert(f.name+" > 5 MB, dilewati");fin()}else send(rd.result.split(",")[1],f.type)};rd.readAsDataURL(f)})}
-/* ===== Field lengkap sesuai Excel, form input/edit ===== */
 const AGE=["19 - 20","21 - 25","26 - 30","31 - 35","36 - 40","41 - 45","46 - 50","50+"],HIRED=["0 - 1 Thn","1 - 3 Thn","3 - 5 Thn","5 - 10 Thn","10 Thn +"],KAGE=["00-03 Month","03-06 Month","06-09 Month","09-12 Month","1-2 years","2-3 years","3-5 years","5 years-Up"],YN=["Y","N"],DAYS=[...Array(14)].map((_,i)=>String(i+1));
 const FLD=[["co","Project Name / Subkon","combo"],["ir","Accident Report No"],["date","Date of Accident","date"],["time","Accident Time","sel",HRS],["day","Day (hari ke-)","sel",DAYS],["shift","Shift","sel",["1","2"]],["name","Name"],["nik","NIK"],["title","Name of Accident (judul)"],["dept","Department","combo"],["pos","Position","combo"],["hired","Length of Hired","sel",HIRED],["age","Age (umur karyawan)","sel",AGE],["kage","Kimper Age (umur SIMPER)","sel",KAGE],["kt","Kimper Type","sel",["Full","Probation"]],["loc","Location","combo"],["unit","Unit Type","combo"],["inj","Part of Injury","combo"],["dlMan","Daylost Man","number"],["dlUnit","Daylost Unit","number"],["cost","Estimated Cost TAR (Rp)","number"],["fatigue","Fatigue Condition (Y/N)","sel",YN],["inMess","Living Status – Inside Mess","sel",YN],["outMess","Living Status – Outside Mess","sel",YN],["invStatus","Status Investigasi","sel",INV],["cls","Accident Classification","combo"],["jns","Jenis Accident","combo"]];
 function oth(s){const i=s.parentElement.querySelector("input");i.style.display=s.value=="__other__"?"":"none";if(s.value=="__other__")i.focus()}
-function fld(f,v){const[k,l,t,o]=f;v=v??"";if(t=="combo")return `<div><label>${l}</label><select name="${k}" onchange="oth(this)"><option value=""></option>${opts(k).map(x=>`<option ${v==x?"selected":""}>${esc(x)}</option>`).join("")}<option value="__other__">➕ Lainnya (ketik manual)…</option></select><input name="${k}__o" placeholder="Ketik ${esc(l)} baru" style="display:none;margin-top:6px"></div>`;return `<div><label>${l}</label>${t=="sel"?`<select name="${k}"><option value=""></option>${o.map(x=>`<option ${v==x?"selected":""}>${esc(x)}</option>`).join("")}${v!==""&&!o.map(String).includes(String(v))?`<option selected>${esc(v)}</option>`:""}</select>`:`<input name="${k}" type="${t||"text"}" value="${esc(v)}">`}</div>`}
+function fld(f,v){const[k,l,t,o]=f;v=v??"";if(t=="combo")return `<div><label>${l}</label><select name="${k}" onchange="oth(this)"><option value=""></option>${opts(k).map(x=>`<option ${v==x?"selected":""}>${esc(x)}</option>`).join("")}<option value="__other__">➕ Lainnya (ketik manual)…</option></select><input name="${k}__o" placeholder="Ketik ${esc(l)} baru" style="display:none;margin-top:6px"></div>`;return `<div><label>${l}</label>${t=="sel"?`<select name="${k}"><option value=""></option>${o.map(x=>`<option ${v==x?"selected":""}>${esc(x)}</option>`).join("")}${v!==""&&!o.map(String).includes(String(v))?`<option selected>${esc(v)}</option>`:""}</select>`:`<input name="${k}" type="${t\vert{}\vert{}"text"}" value="${esc(v)}">`}</div>`}
 function form(){const o=V.ed?S.inc.find(x=>x.id==V.ed):null,n=S.inc.length+1;$("#app").innerHTML=`<div class="card"><h3>${o?"Edit":"Input"} resume insiden</h3><form onsubmit="return add(event)"><div class="f">${FLD_(FLD,o||{ir:`IR-${String(n).padStart(3,"0")}/HSE-DP/LHT/`})}</div><p class="mu">${o?"":"Setelah disimpan, lanjutkan ke halaman detail untuk mengisi Root Cause dan RTP."}</p><button class="pri">Simpan</button> <button type="button" onclick="${o?`go('detail','${o.id}')`:"go('list')"}">Batal</button></form></div>`}
 function add(e){e.preventDefault();const o=V.ed?S.inc.find(x=>x.id==V.ed):{id:"i"+Date.now(),rc:[],invReport:[]};const fv={};new FormData(e.target).forEach((x,k)=>fv[k]=x);for(const f of FLD){if(f[2]!="combo")continue;const k=f[0];if(fv[k]=="__other__"){const t=(fv[k+"__o"]||"").replace(/\s+/g," ").trim();if(!t){alert("Isi "+f[1]+" secara manual, atau pilih dari daftar.");return false}fv[k]=canon(k,t)}delete fv[k+"__o"]}Object.assign(o,fv);o.mon=MON[+o.date.slice(5,7)-1]||"";["shift","day"].forEach(k=>o[k]=+o[k]||"");["cost","dlMan","dlUnit"].forEach(k=>o[k]=+o[k]||0);if(!V.ed)S.inc.push(o);V.ed=null;save();go("detail",o.id);return false}
 function extra(d){const N=s=>String(s??"").trim().replace(/\s+/g," ");
@@ -167,7 +166,6 @@ const ids=new Set([...S.inc,...S.rtp].map(x=>x.id));Object.keys(SNAP).filter(k=>
 if(!jobs.length)return st("");st("Menyimpan…");
 jobs.reduce((p,[a,d,id,j])=>p.then(()=>enq(()=>api(a,d)).then(()=>{j===null?delete SNAP[id]:SNAP[id]=j})),Promise.resolve())
 .then(()=>{st("Tersimpan ✓");setTimeout(()=>{if($("#st").textContent=="Tersimpan ✓")st("")},1500)}).catch(e=>st("Gagal menyimpan: "+e.message+" — klik di sini untuk coba lagi",1))}
-/* ===== Filter tahun/status & closing insiden ===== */
 const yr=i=>String(i.date||"").slice(0,4),stOf=i=>i.status||"Open",today=()=>new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
 const years=()=>[...new Set(S.inc.map(yr).filter(Boolean))].sort().reverse();
 const F=()=>S.inc.filter(i=>(!V.y||yr(i)==V.y)&&(!V.co||i.co==V.co)&&(!V.st||stOf(i)==V.st)&&(!V.iv||invOf(i)==V.iv)&&(!V.dp||i.dept==V.dp)&&(!V.jb||i.pos==V.jb)&&(!V.lc||i.loc==V.lc)&&(!V.un||i.unit==V.un)&&(!V.cl||i.cls==V.cl)&&(!V.jn||i.jns==V.jn));
@@ -188,14 +186,14 @@ function uplInv(id,fs){const i=S.inc.find(x=>x.id==id);i.invReport=i.invReport||
 const fin=()=>{if(!--n){if(ok)save();render()}};
 [...fs].forEach(f=>{const send=(b,t)=>enq(()=>api("upload",{incId:id,name:f.name,type:t,b64:b})).then(x=>{i.invReport.push(x);ok++;fin()}).catch(e=>{alert(f.name+": "+e.message);fin()});
 const rd=new FileReader();rd.onload=()=>{if(f.type.startsWith("image")){const im=new Image();im.onload=()=>{const k=Math.min(1,1600/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;c.getContext("2d").drawImage(im,0,0,c.width,c.height);send(c.toDataURL("image/jpeg",.8).split(",")[1],"image/jpeg")};im.src=rd.result}else if(f.size>5e6){alert(f.name+" > 5 MB, dilewati");fin()}else send(rd.result.split(",")[1],f.type||"application/pdf")};rd.readAsDataURL(f)})}
-/* ===== Login, navigasi, render ===== */
-function login(){nav();$("#app").innerHTML='<div class="card" style="max-width:380px;margin:40px auto;text-align:center"><h3>Masuk</h3><p class="mu">Gunakan akun Google yang sudah didaftarkan admin.</p><div id="g" style="display:inline-block"></div></div>';
-google.accounts.id.initialize({client_id:CLIENT_ID,callback:r=>{TOKEN=r.credential;sessionStorage.setItem("tk",TOKEN);start()}});google.accounts.id.renderButton($("#g"),{theme:"outline",size:"large"})}
-function logout(){TOKEN="";sessionStorage.removeItem("tk");ME=null;login()}
-async function start(){$("#app").innerHTML='<p class="mu">Memuat data…</p>';try{S=await api("getAll");S.inc.forEach(i=>{if(!i.mon&&i.date)i.mon=MON[+i.date.slice(5,7)-1]||"";if(i.dept=="HR & GA")i.dept="HRGA"});snap();if(!V.y)V.y=years()[0]||"";render()}catch(e){if(e.message!="AUTH")$("#app").innerHTML='<div class="card">'+esc(e.message=="FORBIDDEN"?"Email Anda belum terdaftar di portal. Hubungi admin HSE.":e.message)+'</div>'}}
+
+/* ===== Navigasi & Render Otomatis ===== */
+async function start(){$("#app").innerHTML='<p class="mu">Memuat data…</p>';try{S=await api("getAll");S.inc.forEach(i=>{if(!i.mon&&i.date)i.mon=MON[+i.date.slice(5,7)-1]||"";if(i.dept=="HR & GA")i.dept="HRGA"});snap();if(!V.y)V.y=years()[0]||"";render()}catch(e){$("#app").innerHTML='<div class="card">Gagal memuat: '+esc(e.message)+'</div>'}}
 function nav(){if(!ME){$("#nav").innerHTML="";return}const t=[["dash","Dashboard"],["list","Daftar Insiden"],...(ME.role=="admin"?[["form","+ Input Resume"]]:[]),["rca","Root Cause"],["rtp","RTP & Bukti"]];
-$("#nav").innerHTML=t.map(([k,l])=>`<button class="${V.p==k?"on":""}" onclick="go('${k}')">${l}</button>`).join("")+(OPEN_ACCESS?"":`<button onclick="logout()" style="margin-left:auto">Keluar (${esc(ME.email)})</button>`)}
+$("#nav").innerHTML=t.map(([k,l])=>`<button class="${V.p==k?"on":""}" onclick="go('${k}')">${l}</button>`).join("")}
 function render(){CH.forEach(c=>c.destroy());CH=[];theme();nav();({dash,list,form,detail,rca,rtp:rtpAll})[V.p]();document.body.classList.toggle("ro",ME.role=="viewer");
 if(ME.role!="admin"){document.querySelectorAll(".rc input").forEach(x=>x.disabled=true);document.querySelectorAll("#app form").forEach(f=>f.style.display="none")}}
-window.onload=()=>OPEN_ACCESS||TOKEN?start():login();
+
+// Langsung muat data tanpa meminta login
+window.onload = start;
 </script></body></html>
