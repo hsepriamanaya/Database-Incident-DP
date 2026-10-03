@@ -72,22 +72,40 @@ $("#app").innerHTML=`<div class="card"><div class="row"><input placeholder="Cari
 function list2(){const d=F().filter(i=>(!V.q||(i.title+i.name+i.ir).toLowerCase().includes(V.q.toLowerCase()))&&(!V.m||i.mon==V.m));
 $("#tb").innerHTML=`<table><tr><th>No. Laporan</th><th>Tanggal</th><th>Judul</th><th>Perusahaan</th><th>Klasifikasi</th><th>RTP</th><th>Status</th></tr>${d.map(i=>{const r=rp(i.id),k=r.filter(x=>x.status=="Done").length;return `<tr class="cl" onclick="go('detail','${i.id}')"><td>${esc(i.ir)}</td><td>${i.date}</td><td>${esc(i.title)}</td><td>${esc(i.co)}</td><td><span class="tag">${esc(i.cls)}</span></td><td>${r.length?k+"/"+r.length:"-"}</td><td><span class="tag ${stOf(i)}">${stOf(i)}</span></td></tr>`}).join("")}</table>`}
 const FLD_=(F,v)=>F.map(f=>fld(f,v[f[0]])).join("");
+
+// PENAMBAHAN: update UI Detail (Investigasi Card)
 function detail(){const i=S.inc.find(x=>x.id==V.id);if(!i)return go("list");
 const kv=[["Project/Subkon",i.co],["Tanggal",i.date],["Jam",i.time],["Hari ke-",i.day],["Shift",i.shift==1?"1 (Day)":i.shift==2?"2 (Night)":""],["Nama",i.name],["NIK",i.nik],["Departemen",i.dept],["Jabatan",i.pos],["Lama kerja",i.hired],["Umur",i.age],["Umur SIMPER",i.kage],["Tipe SIMPER",i.kt],["Lokasi",i.loc],["Unit",i.unit],["Bagian luka",i.inj],["Daylost Man",i.dlMan],["Daylost Unit",i.dlUnit],["Estimasi biaya (TAR)","Rp "+idr(+i.cost||0)],["Fatigue",i.fatigue],["Living: Inside Mess",i.inMess],["Living: Outside Mess",i.outMess],["Klasifikasi",i.cls],["Jenis",i.jns]];
+const invStat = i.invStatus || "Belum", invFiles = i.invReport || [];
+
 $("#app").innerHTML=`<button onclick="go('list')">← Kembali</button><div class="card" style="margin-top:10px"><h3>${esc(i.ir)} ${ME.role=="admin"?`<button onclick="go('form');V.ed='${i.id}';render()" style="float:right;text-transform:none">Edit data</button>`:""}</h3><b style="font-size:16px">${esc(i.title)}</b><div class="f" style="margin-top:10px">${kv.map(([a,b])=>`<div><span class="mu">${a}</span><br>${esc(b)||"-"}</div>`).join("")}</div></div>
+<div class="card"><h3>Investigasi Insiden</h3><div class="row ctl"><span class="mu">Status Investigasi: </span><select style="max-width:200px" onchange="up('${i.id}','invStatus',this.value,true)"><option value="Belum" ${invStat=='Belum'?'selected':''}>Belum Dilakukan</option><option value="Sudah" ${invStat=='Sudah'?'selected':''}>Sudah Dilakukan</option></select>${invStat=='Sudah'?`<label class="btn" style="margin:0;color:var(--tx)">📎 Unggah Laporan<input type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" hidden onchange="upl('${i.id}',this.files,true)"></label>`:''}</div><div class="ev" style="margin-top:8px">${invFiles.map(e=>e.t.startsWith("image")?`<img src="${TH(e.id,400)}" title="${esc(e.n)}" onclick="lb('${TH(e.id,1600)}')">`:`<a class="chip" target="_blank" rel="noopener" href="https://drive.google.com/file/d/${e.id}/view">📄 ${esc(e.n)}</a>`).join("")}</div></div>
 ${closeCard(i)}<div class="card"><h3>Root cause</h3>${Object.keys(GRP).map(g=>`<p style="margin:10px 0 4px"><b>${GRP[g]}</b></p><div class="rc">${RC.map((r,x)=>r[1]==g?`<label><input type="checkbox" ${i.rc.includes(x)?"checked":""} onchange="tg('${i.id}',${x},this.checked)">${r[0]}</label>`:"").join("")}</div>`).join("")}</div>
 <div class="card"><h3>Rencana tindak lanjut perbaikan (RTP)</h3>${rp(i.id).map(rtpCard).join("")||'<p class="mu">Belum ada RTP.</p>'}
 <form onsubmit="return addR(event,'${i.id}')" class="f" style="margin-top:10px"><div><label>Tindakan perbaikan</label><input name="action" required></div><div><label>PIC</label><input name="pic"></div><div><label>Target selesai</label><input name="due" type="date"></div><div style="align-self:end"><button class="pri">+ Tambah RTP</button></div></form></div>`}
 function tg(id,x,on){const i=S.inc.find(z=>z.id==id);i.rc=on?[...new Set([...i.rc,x])]:i.rc.filter(y=>y!=x);save()}
 function addR(e,id){e.preventDefault();const o={id:"r"+Date.now(),incId:id,status:"Open",progress:0,ev:[],log:[]};new FormData(e.target).forEach((v,k)=>o[k]=v);S.rtp.push(o);save();render();return false}
+
+// PENAMBAHAN: Update pemanggilan fungsi up() dan upl() khusus RTP (passing argumen isInv = false)
 function rtpCard(r){const od=r.status!="Done"&&r.due&&r.due<new Date().toISOString().slice(0,10);
 return `<div class="card" style="background:var(--bg)"><div class="row" style="justify-content:space-between"><b>${esc(r.action)}</b><span class="tag ${r.status}">${r.status=="Progress"?"Dalam proses":r.status=="Done"?"Selesai":"Open"}</span></div>
 <div class="mu">PIC: ${esc(r.pic)||"-"} · Target: ${r.due||"-"} ${od?'<b style="color:var(--er)">· TERLAMBAT</b>':""}</div>
 <div class="bar" style="margin:6px 0"><i style="width:${r.progress}%"></i></div>
-<div class="row ctl"><select onchange="up('${r.id}','status',this.value)">${[["Open","Open"],["Progress","Dalam proses"],["Done","Selesai"]].map(([v,l])=>`<option value="${v}" ${r.status==v?"selected":""}>${l}</option>`).join("")}</select><input type="range" min="0" max="100" step="5" value="${r.progress}" style="width:140px" onchange="up('${r.id}','progress',+this.value)"><span>${r.progress}%</span><label class="btn" style="margin:0;color:var(--tx)">📎 Unggah bukti<input type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" hidden onchange="upl('${r.id}',this.files)"></label>${ME.role=="admin"?`<button onclick="del('${r.id}')">Hapus</button>`:""}</div>
+<div class="row ctl"><select onchange="up('${r.id}','status',this.value,false)">${[["Open","Open"],["Progress","Dalam proses"],["Done","Selesai"]].map(([v,l])=>`<option value="${v}" ${r.status==v?"selected":""}>${l}</option>`).join("")}</select><input type="range" min="0" max="100" step="5" value="${r.progress}" style="width:140px" onchange="up('${r.id}','progress',+this.value,false)"><span>${r.progress}%</span><label class="btn" style="margin:0;color:var(--tx)">📎 Unggah bukti<input type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" hidden onchange="upl('${r.id}',this.files,false)"></label>${ME.role=="admin"?`<button onclick="del('${r.id}')">Hapus</button>`:""}</div>
 <div class="ev">${r.ev.map(e=>e.t.startsWith("image")?`<img src="${TH(e.id,400)}" title="${esc(e.n)}" onclick="lb('${TH(e.id,1600)}')">`:`<a class="chip" target="_blank" rel="noopener" href="https://drive.google.com/file/d/${e.id}/view">📄 ${esc(e.n)}</a>`).join("")}</div>
 ${r.log.map(l=>`<div class="mu">• ${l}</div>`).join("")}<div class="row ctl" style="margin:6px 0 0"><input placeholder="Catatan progres…" style="flex:1" onkeydown="if(event.key=='Enter'){note('${r.id}',this.value)}"></div></div>`}
-function up(id,k,v){const r=S.rtp.find(x=>x.id==id);r[k]=v;if(k=="status"&&v=="Done")r.progress=100;r.log.push(`${new Date().toLocaleDateString("id-ID")}: ${k=="status"?"status → "+v:"progres "+v+"%"}`);save();render()}
+
+// PENAMBAHAN: Update fungsi up (Support Insiden Status)
+function up(id,k,v,isInc){
+  if(isInc){
+    const i=S.inc.find(x=>x.id==id); i[k]=v;
+  } else {
+    const r=S.rtp.find(x=>x.id==id); r[k]=v;
+    if(k=="status"&&v=="Done")r.progress=100;
+    r.log.push(`${new Date().toLocaleDateString("id-ID")}: ${k=="status"?"status → "+v:"progres "+v+"%"}`);
+  }
+  save();render()
+}
 function note(id,t){if(!t.trim())return;const r=S.rtp.find(x=>x.id==id);r.log.push(`${new Date().toLocaleDateString("id-ID")}: ${t}`);save();render()}
 function del(id){if(confirm("Hapus RTP ini?")){S.rtp=S.rtp.filter(x=>x.id!=id);save();render()}}
 function lb(s){$("#lbi").src=s;$("#lb").style.display="flex"}
@@ -107,16 +125,29 @@ const TH=(id,w)=>`https://drive.google.com/thumbnail?id=${id}&sz=w${w}`;
 async function api(action,data){let r;try{r=JSON.parse(await(await fetch(API_URL,{method:"POST",body:JSON.stringify({action,token:TOKEN,data})})).text())}catch(e){throw Object.assign(new Error("Tidak bisa terhubung ke server (koneksi putus, atau Apps Script mengembalikan error – cek menu Executions)"),{net:1})}
 if(!r.ok){if(r.error=="AUTH")logout();throw new Error(r.error)}ME=r.user;return r.data}
 const snap=()=>{SNAP={};[...S.inc,...S.rtp].forEach(x=>SNAP[x.id]=JSON.stringify(x))};
-function upl(id,fs){const r=S.rtp.find(x=>x.id==id);let n=fs.length,ok=0;
-const fin=()=>{if(!--n){if(ok)r.log.push(`${new Date().toLocaleDateString("id-ID")}: ${ok} bukti ditambahkan`);save();render()}};
-[...fs].forEach(f=>{const send=(b,t)=>enq(()=>api("upload",{incId:r.incId,rtpId:r.id,name:f.name,type:t,b64:b})).then(x=>{r.ev.push(x);ok++;fin()}).catch(e=>{alert(f.name+": "+e.message);fin()});
-const rd=new FileReader();rd.onload=()=>{if(f.type.startsWith("image")){const im=new Image();im.onload=()=>{const k=Math.min(1,1600/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;c.getContext("2d").drawImage(im,0,0,c.width,c.height);send(c.toDataURL("image/jpeg",.8).split(",")[1],"image/jpeg")};im.src=rd.result}else if(f.size>5e6){alert(f.name+" > 5 MB, dilewati");fin()}else send(rd.result.split(",")[1],f.type)};rd.readAsDataURL(f)})}
+
+// PENAMBAHAN: Update fungsi upl untuk upload file Laporan Investigasi maupun RTP 
+function upl(id,fs,isInv){
+  const obj = isInv ? S.inc.find(x=>x.id==id) : S.rtp.find(x=>x.id==id);
+  if(isInv && !obj.invReport) obj.invReport = [];
+  const evArr = isInv ? obj.invReport : obj.ev;
+  
+  let n=fs.length,ok=0;
+  const fin=()=>{if(!--n){if(ok){ if(!isInv) obj.log.push(`${new Date().toLocaleDateString("id-ID")}: ${ok} bukti ditambahkan`); save();render()}}};
+  
+  [...fs].forEach(f=>{
+    const send=(b,t)=>enq(()=>api("upload",{incId: isInv ? obj.id : obj.incId, rtpId: isInv ? null : obj.id, name:f.name,type:t,b64:b})).then(x=>{evArr.push(x);ok++;fin()}).catch(e=>{alert(f.name+": "+e.message);fin()});
+    
+    const rd=new FileReader();rd.onload=()=>{if(f.type.startsWith("image")){const im=new Image();im.onload=()=>{const k=Math.min(1,1600/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;c.getContext("2d").drawImage(im,0,0,c.width,c.height);send(c.toDataURL("image/jpeg",.8).split(",")[1],"image/jpeg")};im.src=rd.result}else if(f.size>5e6){alert(f.name+" > 5 MB, dilewati");fin()}else send(rd.result.split(",")[1],f.type)};rd.readAsDataURL(f)
+  });
+}
+
 /* ===== Field lengkap sesuai Excel, form input/edit ===== */
 const AGE=["19 - 20","21 - 25","26 - 30","31 - 35","36 - 40","41 - 45","46 - 50","50+"],HIRED=["0 - 1 Thn","1 - 3 Thn","3 - 5 Thn","5 - 10 Thn","10 Thn +"],KAGE=["00-03 Month","03-06 Month","06-09 Month","09-12 Month","1-2 years","2-3 years","3-5 years","5 years-Up"],YN=["Y","N"],DAYS=[...Array(14)].map((_,i)=>String(i+1));
 const FLD=[["co","Project Name / Subkon","sel",COMP],["ir","Accident Report No"],["date","Date of Accident","date"],["time","Accident Time","sel",HRS],["day","Day (hari ke-)","sel",DAYS],["shift","Shift","sel",["1","2"]],["name","Name"],["nik","NIK"],["title","Name of Accident (judul)"],["dept","Department","sel",DEPT],["pos","Position"],["hired","Length of Hired","sel",HIRED],["age","Age (umur karyawan)","sel",AGE],["kage","Kimper Age (umur SIMPER)","sel",KAGE],["kt","Kimper Type","sel",["Full","Probation"]],["loc","Location"],["unit","Unit Type"],["inj","Part of Injury"],["dlMan","Daylost Man","number"],["dlUnit","Daylost Unit","number"],["cost","Estimated Cost TAR (Rp)","number"],["fatigue","Fatigue Condition (Y/N)","sel",YN],["inMess","Living Status – Inside Mess","sel",YN],["outMess","Living Status – Outside Mess","sel",YN],["cls","Accident Classification","sel",CLS],["jns","Jenis Accident","sel",JNS]];
-function fld(f,v){const[k,l,t,o]=f;v=v??"";return `<div><label>${l}</label>${t=="sel"?`<select name="${k}"><option value=""></option>${o.map(x=>`<option ${v==x?"selected":""}>${esc(x)}</option>`).join("")}${v!==""&&!o.map(String).includes(String(v))?`<option selected>${esc(v)}</option>`:""}</select>`:`<input name="${k}" type="${t||"text"}" value="${esc(v)}">`}</div>`}
+function fld(f,v){const[k,l,t,o]=f;v=v??"";return `<div><label>${l}</label>${t=="sel"?`<select name="${k}"><option value=""></option>${o.map(x=>`<option ${v==x?"selected":""}>${esc(x)}</option>`).join("")}${v!==""&&!o.map(String).includes(String(v))?`<option selected>${esc(v)}</option>`:""}</select>`:`<input name="${k}" type="${t\vert{}\vert{}"text"}" value="${esc(v)}">`}</div>`}
 function form(){const o=V.ed?S.inc.find(x=>x.id==V.ed):null,n=S.inc.length+1;$("#app").innerHTML=`<div class="card"><h3>${o?"Edit":"Input"} resume insiden</h3><form onsubmit="return add(event)"><div class="f">${FLD_(FLD,o||{ir:`IR-${String(n).padStart(3,"0")}/HSE-DP/LHT/`})}</div><p class="mu">${o?"":"Setelah disimpan, lanjutkan ke halaman detail untuk mengisi Root Cause dan RTP."}</p><button class="pri">Simpan</button> <button type="button" onclick="${o?`go('detail','${o.id}')`:"go('list')"}">Batal</button></form></div>`}
-function add(e){e.preventDefault();const o=V.ed?S.inc.find(x=>x.id==V.ed):{id:"i"+Date.now(),rc:[]};new FormData(e.target).forEach((v,k)=>o[k]=v);o.mon=MON[+o.date.slice(5,7)-1]||"";["shift","day"].forEach(k=>o[k]=+o[k]||"");["cost","dlMan","dlUnit"].forEach(k=>o[k]=+o[k]||0);if(!V.ed)S.inc.push(o);V.ed=null;save();go("detail",o.id);return false}
+function add(e){e.preventDefault();const o=V.ed?S.inc.find(x=>x.id==V.ed):{id:"i"+Date.now(),rc:[],invStatus:"Belum",invReport:[]};new FormData(e.target).forEach((v,k)=>o[k]=v);o.mon=MON[+o.date.slice(5,7)-1]||"";["shift","day"].forEach(k=>o[k]=+o[k]||"");["cost","dlMan","dlUnit"].forEach(k=>o[k]=+o[k]||0);if(!V.ed)S.inc.push(o);V.ed=null;save();go("detail",o.id);return false}
 function extra(d){const N=s=>String(s??"").trim().replace(/\s+/g," ");
 const og=(f,id,ord,t="bar",o)=>{const m={};d.forEach(i=>{const k=N(f(i));if(k)m[k]=(m[k]||0)+1});const ks=[...ord.filter(k=>m[k]),...Object.keys(m).filter(k=>!ord.includes(k)).sort((a,b)=>m[b]-m[a])];chart(id,t,ks,ks.map(k=>m[k]),o)};
 og(i=>i.day,"c10",DAYS);og(i=>i.pos,"c11",[],"bar",{h:1});og(i=>i.hired,"c12",HIRED);og(i=>i.age,"c13",AGE);og(i=>i.kage,"c14",KAGE);
