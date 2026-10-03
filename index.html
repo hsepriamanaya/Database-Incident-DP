@@ -1,0 +1,130 @@
+<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Portal Insiden & RTP - PT Dizamatra Powerindo</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#1b2430;--mu:#667085;--bd:#e3e6eb;--pr:#c2410c;--ok:#16a34a;--wa:#d97706;--er:#dc2626;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#12161c;--card:#1b222b;--tx:#e8ecf1;--mu:#98a2b3;--bd:#2c3642;--pr:#fb923c}}
+:root[data-theme=dark]{--bg:#12161c;--card:#1b222b;--tx:#e8ecf1;--mu:#98a2b3;--bd:#2c3642;--pr:#fb923c}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:var(--card);border-bottom:1px solid var(--bd);padding:10px 16px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+h1{font-size:16px;margin:0}h1 small{color:var(--mu);font-weight:400;display:block;font-size:12px}
+nav{display:flex;gap:6px;margin-top:8px;overflow-x:auto}nav button{white-space:nowrap}
+button,.btn{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:6px 12px;border-radius:8px;cursor:pointer}
+button.on,button.pri{background:var(--pr);color:#fff;border-color:var(--pr)}
+main{padding:16px;max-width:1200px;margin:auto}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:14px}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.kpis{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:14px}
+.kpi b{font-size:24px;display:block}.kpi span,.mu{color:var(--mu);font-size:12px}
+h3{margin:0 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.03em;color:var(--mu)}
+.cv{position:relative;height:240px}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--bd);vertical-align:top}th{font-size:12px;color:var(--mu)}
+tr.cl{cursor:pointer}tr.cl:hover{background:var(--bg)}
+.wrap{overflow-x:auto}
+input,select,textarea{font:inherit;width:100%;padding:7px 9px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx)}
+label{display:block;font-size:12px;color:var(--mu);margin-bottom:2px}
+.f{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.tag{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11px;border:1px solid var(--bd)}
+.Open{color:var(--er)}.Progress{color:var(--wa)}.Done{color:var(--ok)}
+.bar{height:8px;background:var(--bd);border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ok)}
+.ev{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}.ev img{height:70px;border-radius:6px;cursor:pointer;border:1px solid var(--bd)}
+.chip{padding:4px 8px;border:1px solid var(--bd);border-radius:8px;font-size:12px}
+.rc{display:grid;gap:4px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}.rc label{display:flex;gap:6px;align-items:center;color:var(--tx);font-size:13px}.rc input{width:auto}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}.row>*{width:auto}
+#lb{position:fixed;inset:0;background:#000c;display:none;align-items:center;justify-content:center;z-index:9}#lb img{max-width:92%;max-height:92%}
+body.ro .ctl{display:none}a.chip{color:var(--tx);text-decoration:none}
+</style>
+<script src="https://accounts.google.com/gsi/client" async defer></script></head><body>
+<header><h1>Portal Insiden & RTP <small>PT. Dizamatra Powerindo – Lahat · Periode 2026</small></h1>
+<nav id="nav"></nav></header><main id="app"></main><div id="lb" onclick="this.style.display='none'"><img id="lbi"></div>
+<script>
+const RC=[["Pelaksanaan Prosedur/Kebijakan","UA"],["Penggunaan Peralatan","UA"],["Metode Perlindungan (APD)","UA"],["Tidak Memperhatikan/Menyadari","UA"],["Sistem Pengaman Tidak Memadai","UC"],["Perkakas/Peralatan Tidak Aman","UC"],["Pemaparan Kondisi Kesehatan","UC"],["Lingkungan Kerja Tidak Aman","UC"],["Ketidakmampuan Fisik","HF"],["Stress Fisik","HF"],["Ketidakmampuan Mental","HF"],["Stress Mental","HF"],["Tingkat Keterampilan","HF"],["Perilaku/Kurang Motivasi","HF"],["Kurang Pelatihan","JF"],["Supervisi Tidak Memadai","JF"],["Seleksi & Pengawasan Kontraktor","JF"],["Rekayasa Desain","JF"],["Rencana Pemeliharaan","JF"],["Pembelian & Kendali Bahan","JF"],["Perkakas/Peralatan Tidak Memadai","JF"],["Peraturan/Prosedur Kerja","JF"],["Komunikasi Tidak Memadai","JF"]];
+const GRP={UA:"Tindakan Tidak Aman",UC:"Kondisi Tidak Aman",HF:"Faktor Manusia",JF:"Faktor Pekerjaan"};
+const COMP=["PT. DIZAMATRA POWERINDO","PT. ANTAREJA MAHADA MAKMUR","PT. SCADA","PT. KALIMANTAN PRIMA PERSADA","PT. SUCOFINDO","SUBCON/VENDOR","PT. CIPTAKRIDATAMA"];
+const DEPT=["PRODUKSI","ANGKUTAN & STASIUN","MAINTENANCE","HR & GA","HEALTH SAFETY & ENVIRONMENT","TECHNICAL SERVICES","CIVIL PROJECT","SUPPLY CHAIN MANAGEMENT"];
+const CLS=["Nearmiss","Property Damage","First Aid","Medical Treatment","Lost Time Injury","Fatality"];
+const JNS=["Menabrak/Ditabrak","Jatuh Pada Permukaan Yang Sama","Tenggelam, Terperosok, Amblas","Terbentur","Proses penanganan(Lifting, Mendorong, Menarik)","Tipe Insiden Lainnya"];
+const HRS=[...Array(24)].map((_,i)=>{const p=n=>String(n).padStart(2,"0");return `${p(i)}:01 - ${p(i+1)}:00`});
+const MON=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+let V={p:"dash",id:null,co:"",q:"",m:"",rs:""},CH=[];
+const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const cnt=(a,f)=>{const m={};a.forEach(x=>{const k=f(x);if(k)m[k]=(m[k]||0)+1});return Object.entries(m).sort((a,b)=>b[1]-a[1])};
+const rp=i=>S.rtp.filter(r=>r.incId===i), idr=n=>n.toLocaleString("id-ID");
+function go(p,id){V.p=p;if(id!==undefined)V.id=id;render();scrollTo(0,0)}
+function chart(id,type,labels,data,opt={}){const el=document.getElementById(id);if(!el||!window.Chart)return;
+CH.push(new Chart(el,{type,data:{labels,datasets:[{data,backgroundColor:type=="bar"||type=="line"?"#c2410c":["#c2410c","#0e7490","#6d28d9","#ca8a04","#16a34a","#db2777","#475569"],borderColor:"#c2410c",tension:.3}]},options:{indexAxis:opt.h?"y":"x",maintainAspectRatio:false,plugins:{legend:{display:type=="doughnut"}},scales:type=="doughnut"?{}:{x:{ticks:{autoSkip:false,font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0}}}}}))}
+function cardChart(t,id,h){return `<div class="card"><h3>${t}</h3><div class="cv" style="height:${h||240}px"><canvas id="${id}"></canvas></div></div>`}
+function dash(){const d=S.inc.filter(i=>!V.co||i.co==V.co),n=d.length,r=S.rtp.filter(x=>!V.co||d.some(i=>i.id==x.incId));
+const dn=r.filter(x=>x.status=="Done").length,cost=d.reduce((a,i)=>a+(+i.cost||0),0),c=k=>d.filter(i=>i.cls==k).length;
+$("#app").innerHTML=`<div class="row"><select onchange="V.co=this.value;render()"><option value="">Semua perusahaan</option>${COMP.map(c=>`<option ${V.co==c?"selected":""}>${c}</option>`).join("")}</select></div>
+<div class="kpis"><div class="card kpi"><b>${n}</b><span>Total insiden</span></div><div class="card kpi"><b>${c("Nearmiss")}</b><span>Nearmiss</span></div><div class="card kpi"><b>${c("Property Damage")}</b><span>Property Damage</span></div><div class="card kpi"><b>${c("First Aid")}</b><span>First Aid</span></div><div class="card kpi"><b>Rp ${idr(cost)}</b><span>Estimasi biaya</span></div><div class="card kpi"><b>${r.length?Math.round(dn/r.length*100):0}%</b><span>RTP selesai (${dn}/${r.length})</span></div></div>
+<div class="grid">${cardChart("Tren per bulan","c1")}${cardChart("Berdasarkan perusahaan","c2")}${cardChart("Klasifikasi insiden","c3")}${cardChart("Jenis insiden","c4",280)}${cardChart("Waktu kejadian","c5")}${cardChart("Shift","c6")}${cardChart("Departemen","c7")}${cardChart("Tempat kejadian","c8",280)}${cardChart("Unit terlibat","c9",280)}</div>`;
+const g=(f,id,t="bar",o)=>{const e=cnt(d,f);chart(id,t,e.map(x=>x[0]),e.map(x=>x[1]),o)};
+chart("c1","line",MON.slice(0,9),MON.slice(0,9).map(m=>d.filter(i=>i.mon==m).length));
+g(i=>i.co,"c2","bar",{h:1});g(i=>i.cls,"c3","doughnut");g(i=>i.jns,"c4","bar",{h:1});
+chart("c5","bar",HRS.map(h=>h.slice(0,5)),HRS.map(h=>d.filter(i=>i.time==h).length));
+g(i=>i.shift?(i.shift==1?"Day":"Night"):"","c6","doughnut");g(i=>i.dept,"c7","bar",{h:1});g(i=>i.loc,"c8","bar",{h:1});g(i=>i.unit,"c9","bar",{h:1})}
+function list(){const d=S.inc.filter(i=>(!V.q||(i.title+i.name+i.ir).toLowerCase().includes(V.q.toLowerCase()))&&(!V.m||i.mon==V.m)&&(!V.co||i.co==V.co));
+$("#app").innerHTML=`<div class="card"><div class="row"><input placeholder="Cari judul / nama / no. laporan" value="${esc(V.q)}" oninput="V.q=this.value;list2()" style="max-width:300px"><select onchange="V.m=this.value;render()"><option value="">Semua bulan</option>${MON.map(m=>`<option ${V.m==m?"selected":""}>${m}</option>`).join("")}</select><select onchange="V.co=this.value;render()"><option value="">Semua perusahaan</option>${COMP.map(c=>`<option ${V.co==c?"selected":""}>${c}</option>`).join("")}</select><span class="mu">${d.length} data</span></div><div class="wrap" id="tb"></div></div>`;list2()}
+function list2(){const d=S.inc.filter(i=>(!V.q||(i.title+i.name+i.ir).toLowerCase().includes(V.q.toLowerCase()))&&(!V.m||i.mon==V.m)&&(!V.co||i.co==V.co));
+$("#tb").innerHTML=`<table><tr><th>No. Laporan</th><th>Tanggal</th><th>Judul</th><th>Perusahaan</th><th>Klasifikasi</th><th>RTP</th></tr>${d.map(i=>{const r=rp(i.id),k=r.filter(x=>x.status=="Done").length;return `<tr class="cl" onclick="go('detail','${i.id}')"><td>${esc(i.ir)}</td><td>${i.date}</td><td>${esc(i.title)}</td><td>${esc(i.co)}</td><td><span class="tag">${esc(i.cls)}</span></td><td>${r.length?k+"/"+r.length:"-"}</td></tr>`}).join("")}</table>`}
+const FLD=[["co","Perusahaan","sel",COMP],["ir","No. Laporan"],["date","Tanggal kejadian","date"],["time","Jam kejadian","sel",HRS],["name","Nama"],["nik","NIK"],["title","Judul insiden"],["dept","Departemen","sel",DEPT],["shift","Shift","sel",["1","2"]],["pos","Jabatan"],["hired","Lama kerja"],["age","Umur"],["kt","Tipe kimper"],["loc","Lokasi"],["unit","Tipe unit"],["inj","Bagian luka"],["cls","Klasifikasi","sel",CLS],["jns","Jenis insiden","sel",JNS],["cost","Estimasi biaya (Rp)","number"]];
+function fld(f,v){const[k,l,t,o]=f;v=v??"";return `<div><label>${l}</label>${t=="sel"?`<select name="${k}"><option value=""></option>${o.map(x=>`<option ${v==x?"selected":""}>${esc(x)}</option>`).join("")}</select>`:`<input name="${k}" type="${t||"text"}" value="${esc(v)}">`}</div>`}
+function form(){const n=S.inc.length+1;$("#app").innerHTML=`<div class="card"><h3>Input resume insiden</h3><form onsubmit="return add(event)"><div class="f">${FLD_(FLD,{ir:`IR-${String(n).padStart(3,"0")}/HSE-DP/LHT/`})}</div><p class="mu">Setelah disimpan, lanjutkan ke halaman detail untuk mengisi Root Cause dan RTP.</p><button class="pri">Simpan insiden</button></form></div>`}
+const FLD_=(F,v)=>F.map(f=>fld(f,v[f[0]])).join("");
+function add(e){e.preventDefault();const o={id:"i"+Date.now(),rc:[]};new FormData(e.target).forEach((v,k)=>o[k]=v);const d=new Date(o.date);o.mon=MON[d.getMonth()]||"";o.shift=+o.shift||"";S.inc.push(o);save();go("detail",o.id);return false}
+function detail(){const i=S.inc.find(x=>x.id==V.id);if(!i)return go("list");
+const kv=[["Perusahaan",i.co],["Tanggal",i.date],["Jam",i.time],["Nama",i.name],["Departemen",i.dept],["Jabatan",i.pos],["Lokasi",i.loc],["Unit",i.unit],["Bagian luka",i.inj],["Klasifikasi",i.cls],["Jenis",i.jns],["Biaya","Rp "+idr(+i.cost||0)]];
+$("#app").innerHTML=`<button onclick="go('list')">← Kembali</button><div class="card" style="margin-top:10px"><h3>${esc(i.ir)}</h3><b style="font-size:16px">${esc(i.title)}</b><div class="f" style="margin-top:10px">${kv.map(([a,b])=>`<div><span class="mu">${a}</span><br>${esc(b)||"-"}</div>`).join("")}</div></div>
+<div class="card"><h3>Root cause</h3>${Object.keys(GRP).map(g=>`<p style="margin:10px 0 4px"><b>${GRP[g]}</b></p><div class="rc">${RC.map((r,x)=>r[1]==g?`<label><input type="checkbox" ${i.rc.includes(x)?"checked":""} onchange="tg('${i.id}',${x},this.checked)">${r[0]}</label>`:"").join("")}</div>`).join("")}</div>
+<div class="card"><h3>Rencana tindak lanjut perbaikan (RTP)</h3>${rp(i.id).map(rtpCard).join("")||'<p class="mu">Belum ada RTP.</p>'}
+<form onsubmit="return addR(event,'${i.id}')" class="f" style="margin-top:10px"><div><label>Tindakan perbaikan</label><input name="action" required></div><div><label>PIC</label><input name="pic"></div><div><label>Target selesai</label><input name="due" type="date"></div><div style="align-self:end"><button class="pri">+ Tambah RTP</button></div></form></div>`}
+function tg(id,x,on){const i=S.inc.find(z=>z.id==id);i.rc=on?[...new Set([...i.rc,x])]:i.rc.filter(y=>y!=x);save()}
+function addR(e,id){e.preventDefault();const o={id:"r"+Date.now(),incId:id,status:"Open",progress:0,ev:[],log:[]};new FormData(e.target).forEach((v,k)=>o[k]=v);S.rtp.push(o);save();render();return false}
+function rtpCard(r){const od=r.status!="Done"&&r.due&&r.due<new Date().toISOString().slice(0,10);
+return `<div class="card" style="background:var(--bg)"><div class="row" style="justify-content:space-between"><b>${esc(r.action)}</b><span class="tag ${r.status}">${r.status=="Progress"?"Dalam proses":r.status=="Done"?"Selesai":"Open"}</span></div>
+<div class="mu">PIC: ${esc(r.pic)||"-"} · Target: ${r.due||"-"} ${od?'<b style="color:var(--er)">· TERLAMBAT</b>':""}</div>
+<div class="bar" style="margin:6px 0"><i style="width:${r.progress}%"></i></div>
+<div class="row ctl"><select onchange="up('${r.id}','status',this.value)">${[["Open","Open"],["Progress","Dalam proses"],["Done","Selesai"]].map(([v,l])=>`<option value="${v}" ${r.status==v?"selected":""}>${l}</option>`).join("")}</select><input type="range" min="0" max="100" step="5" value="${r.progress}" style="width:140px" onchange="up('${r.id}','progress',+this.value)"><span>${r.progress}%</span><label class="btn" style="margin:0;color:var(--tx)">📎 Unggah bukti<input type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" hidden onchange="upl('${r.id}',this.files)"></label>${ME.role=="admin"?`<button onclick="del('${r.id}')">Hapus</button>`:""}</div>
+<div class="ev">${r.ev.map(e=>e.t.startsWith("image")?`<img src="${TH(e.id,400)}" title="${esc(e.n)}" onclick="lb('${TH(e.id,1600)}')">`:`<a class="chip" target="_blank" rel="noopener" href="https://drive.google.com/file/d/${e.id}/view">📄 ${esc(e.n)}</a>`).join("")}</div>
+${r.log.map(l=>`<div class="mu">• ${l}</div>`).join("")}<div class="row ctl" style="margin:6px 0 0"><input placeholder="Catatan progres…" style="flex:1" onkeydown="if(event.key=='Enter'){note('${r.id}',this.value)}"></div></div>`}
+function up(id,k,v){const r=S.rtp.find(x=>x.id==id);r[k]=v;if(k=="status"&&v=="Done")r.progress=100;r.log.push(`${new Date().toLocaleDateString("id-ID")}: ${k=="status"?"status → "+v:"progres "+v+"%"}`);save();render()}
+function note(id,t){if(!t.trim())return;const r=S.rtp.find(x=>x.id==id);r.log.push(`${new Date().toLocaleDateString("id-ID")}: ${t}`);save();render()}
+function del(id){if(confirm("Hapus RTP ini?")){S.rtp=S.rtp.filter(x=>x.id!=id);save();render()}}
+function lb(s){$("#lbi").src=s;$("#lb").style.display="flex"}
+function rca(){const d=S.inc.filter(i=>!V.co||i.co==V.co),c=RC.map((r,x)=>d.filter(i=>i.rc.includes(x)).length);
+$("#app").innerHTML=`<div class="row"><select onchange="V.co=this.value;render()"><option value="">Semua perusahaan</option>${COMP.map(k=>`<option ${V.co==k?"selected":""}>${k}</option>`).join("")}</select></div><div class="grid">${cardChart("Root cause – ringkasan 4 kelompok","r0")}${Object.keys(GRP).map(g=>cardChart(GRP[g],"r"+g,300)).join("")}</div>`;
+chart("r0","bar",Object.values(GRP),Object.keys(GRP).map(g=>RC.reduce((a,r,x)=>a+(r[1]==g?c[x]:0),0)));
+Object.keys(GRP).forEach(g=>{const e=RC.map((r,x)=>[r[0],c[x]]).filter((_,x)=>RC[x][1]==g);chart("r"+g,"bar",e.map(x=>x[0]),e.map(x=>x[1]),{h:1})})}
+function rtpAll(){const A=S.rtp.filter(r=>!V.rs||r.status==V.rs);
+$("#app").innerHTML=`<div class="row"><select onchange="V.rs=this.value;render()"><option value="">Semua status</option><option value="Open">Open</option><option value="Progress">Dalam proses</option><option value="Done">Selesai</option></select><span class="mu">${A.length} RTP</span></div>${A.map(r=>{const i=S.inc.find(x=>x.id==r.incId)||{};return `<div><a href="#" onclick="go('detail','${i.id}');return false" style="color:var(--pr)">${esc(i.ir)} – ${esc(i.title)}</a>${rtpCard(r)}</div>`}).join("")||'<div class="card mu">Belum ada RTP. Buka sebuah insiden dari Daftar Insiden untuk menambahkannya.</div>'}`}
+
+/* ===== KONFIGURASI: isi dua nilai ini ===== */
+const OPEN_ACCESS=true; /* true = tanpa login (sementara). false = wajib login Google */
+const API_URL="https://script.google.com/macros/s/AKfycbzGzLNBM9Vp8AABYMtpvY9TT8MTAJZokrCmA7KUeNCkrAXPbOoqqTp4_oV024HMhE9E/exec",CLIENT_ID="GANTI_DENGAN_CLIENT_ID.apps.googleusercontent.com";
+/* ===== Koneksi ke Apps Script ===== */
+let S={inc:[],rtp:[]},ME=null,TOKEN=sessionStorage.getItem("tk")||"",SNAP={};
+const TH=(id,w)=>`https://drive.google.com/thumbnail?id=${id}&sz=w${w}`;
+async function api(action,data){let r;try{r=await(await fetch(API_URL,{method:"POST",body:JSON.stringify({action,token:TOKEN,data})})).json()}catch(e){throw new Error("Tidak bisa terhubung ke server")}
+if(!r.ok){if(r.error=="AUTH")logout();throw new Error(r.error)}ME=r.user;return r.data}
+const call=(a,d)=>api(a,d).catch(e=>{alert("Gagal menyimpan: "+e.message);start()});
+const snap=()=>{SNAP={};[...S.inc,...S.rtp].forEach(x=>SNAP[x.id]=JSON.stringify(x))};
+function save(){const ids=new Set([...S.inc,...S.rtp].map(x=>x.id));
+S.inc.forEach(i=>{if(SNAP[i.id]!=JSON.stringify(i))call("saveInc",i)});
+S.rtp.forEach(r=>{if(SNAP[r.id]!=JSON.stringify(r))call("saveRtp",r)});
+Object.keys(SNAP).filter(k=>!ids.has(k)&&k[0]=="r").forEach(k=>call("delRtp",{id:k}));snap()}
+function upl(id,fs){const r=S.rtp.find(x=>x.id==id);let n=fs.length,ok=0;
+const fin=()=>{if(!--n){if(ok)r.log.push(`${new Date().toLocaleDateString("id-ID")}: ${ok} bukti ditambahkan`);save();render()}};
+[...fs].forEach(f=>{const send=(b,t)=>api("upload",{incId:r.incId,rtpId:r.id,name:f.name,type:t,b64:b}).then(x=>{r.ev.push(x);ok++;fin()}).catch(e=>{alert(f.name+": "+e.message);fin()});
+const rd=new FileReader();rd.onload=()=>{if(f.type.startsWith("image")){const im=new Image();im.onload=()=>{const k=Math.min(1,1600/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;c.getContext("2d").drawImage(im,0,0,c.width,c.height);send(c.toDataURL("image/jpeg",.8).split(",")[1],"image/jpeg")};im.src=rd.result}else if(f.size>5e6){alert(f.name+" > 5 MB, dilewati");fin()}else send(rd.result.split(",")[1],f.type)};rd.readAsDataURL(f)})}
+/* ===== Login, navigasi, render ===== */
+function login(){nav();$("#app").innerHTML='<div class="card" style="max-width:380px;margin:40px auto;text-align:center"><h3>Masuk</h3><p class="mu">Gunakan akun Google yang sudah didaftarkan admin.</p><div id="g" style="display:inline-block"></div></div>';
+google.accounts.id.initialize({client_id:CLIENT_ID,callback:r=>{TOKEN=r.credential;sessionStorage.setItem("tk",TOKEN);start()}});google.accounts.id.renderButton($("#g"),{theme:"outline",size:"large"})}
+function logout(){TOKEN="";sessionStorage.removeItem("tk");ME=null;login()}
+async function start(){$("#app").innerHTML='<p class="mu">Memuat data…</p>';try{S=await api("getAll");snap();render()}catch(e){if(e.message!="AUTH")$("#app").innerHTML='<div class="card">'+esc(e.message=="FORBIDDEN"?"Email Anda belum terdaftar di portal. Hubungi admin HSE.":e.message)+'</div>'}}
+function nav(){if(!ME){$("#nav").innerHTML="";return}const t=[["dash","Dashboard"],["list","Daftar Insiden"],...(ME.role=="admin"?[["form","+ Input Resume"]]:[]),["rca","Root Cause"],["rtp","RTP & Bukti"]];
+$("#nav").innerHTML=t.map(([k,l])=>`<button class="${V.p==k?"on":""}" onclick="go('${k}')">${l}</button>`).join("")+(OPEN_ACCESS?"":`<button onclick="logout()" style="margin-left:auto">Keluar (${esc(ME.email)})</button>`)}
+function render(){CH.forEach(c=>c.destroy());CH=[];nav();({dash,list,form,detail,rca,rtp:rtpAll})[V.p]();document.body.classList.toggle("ro",ME.role=="viewer");
+if(ME.role!="admin"){document.querySelectorAll(".rc input").forEach(x=>x.disabled=true);document.querySelectorAll("#app form").forEach(f=>f.style.display="none")}}
+window.onload=()=>OPEN_ACCESS||TOKEN?start():login();
+</script></body></html>
