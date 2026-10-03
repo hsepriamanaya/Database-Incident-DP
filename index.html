@@ -44,8 +44,8 @@ const RC=[["Pelaksanaan Prosedur/Kebijakan","UA"],["Penggunaan Peralatan","UA"],
 const GRP={UA:"Tindakan Tidak Aman",UC:"Kondisi Tidak Aman",HF:"Faktor Manusia",JF:"Faktor Pekerjaan"};
 const COMP=["PT. DIZAMATRA POWERINDO","PT. ANTAREJA MAHADA MAKMUR","PT. SCADA","PT. KALIMANTAN PRIMA PERSADA","PT. SUCOFINDO","SUBCON/VENDOR","PT. CIPTAKRIDATAMA"];
 const DEPT=["PRODUKSI","ANGKUTAN & STASIUN","MAINTENANCE","HR & GA","HEALTH SAFETY & ENVIRONMENT","TECHNICAL SERVICES","CIVIL PROJECT","SUPPLY CHAIN MANAGEMENT"];
-const CLS=["Nearmiss","Property Damage","First Aid","Medical Treatment","Lost Time Injury","Fatality"];
-const JNS=["Menabrak/Ditabrak","Jatuh Pada Permukaan Yang Sama","Tenggelam, Terperosok, Amblas","Terbentur","Proses penanganan(Lifting, Mendorong, Menarik)","Tipe Insiden Lainnya"];
+const CLS=["Nearmiss","Property Damage","First Aid","Minor Treatment Injury","Medical Treatment","Lost Time Injury","Fatality"];
+const JNS=["Menabrak/Ditabrak","Jatuh Pada Permukaan Yang Sama","Tenggelam, Terperosok, Amblas","Terbentur","Proses penanganan(Lifting, Mendorong, Menarik)","Terjepit","Tertimpa","Kebakaran/ledakan","Jatuh dari Ketinggian","Tekanan, Beban berlebih, digunakan berlebih.","Tipe Insiden Lainnya"];
 const INV=["Belum Dimulai","Sedang Investigasi","Selesai"],invOf=i=>INV.includes(i.invStatus)?i.invStatus:INV[0],invCls=i=>"inv"+INV.indexOf(invOf(i));
 const HRS=[...Array(24)].map((_,i)=>{const p=n=>String(n).padStart(2,"0");return `${p(i)}:01 - ${p(i+1)}:00`});
 const MON=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
