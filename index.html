@@ -143,10 +143,25 @@ const TH=(id,w)=>`https://drive.google.com/thumbnail?id=${id}&sz=w${w}`;
 async function api(action,data){let r;try{r=JSON.parse(await(await fetch(API_URL,{method:"POST",body:JSON.stringify({action,token:TOKEN,data})})).text())}catch(e){throw Object.assign(new Error("Tidak bisa terhubung ke server (koneksi putus, atau Apps Script mengembalikan error – cek menu Executions)"),{net:1})}
 if(!r.ok){if(r.error=="AUTH")logout();throw new Error(r.error)}ME=r.user;return r.data}
 const snap=()=>{SNAP={};[...S.inc,...S.rtp].forEach(x=>SNAP[x.id]=JSON.stringify(x))};
-function upl(id,fs){const r=S.rtp.find(x=>x.id==id);let n=fs.length,ok=0;
-const fin=()=>{if(!--n){if(ok)r.log.push(`${new Date().toLocaleDateString("id-ID")}: ${ok} bukti ditambahkan`);save();render()}};
-[...fs].forEach(f=>{const send=(b,t)=>enq(()=>api("upload",{incId:r.incId,rtpId:r.id,name:f.name,type:t,b64:b})).then(x=>{r.ev.push(x);ok++;fin()}).catch(e=>{alert(f.name+": "+e.message);fin()});
-const rd=new FileReader();rd.onload=()=>{if(f.type.startsWith("image")){const im=new Image();im.onload=()=>{const k=Math.min(1,1600/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;c.getContext("2d").drawImage(im,0,0,c.width,c.height);send(c.toDataURL("image/jpeg",.8).split(",")[1],"image/jpeg")};im.src=rd.result}else if(f.size>5e6){alert(f.name+" > 5 MB, dilewati");fin()}else send(rd.result.split(",")[1],f.type)};rd.readAsDataURL(f)})}
+/* ===== Unggah file (kecil langsung, besar bertahap per 2 MB, maks. 100 MB) ===== */
+const CHK=2097152,MAXF=104857600;
+const b64c=b=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result.split(",")[1]);r.onerror=no;r.readAsDataURL(b)});
+const imgB64=f=>new Promise((ok,no)=>{const rd=new FileReader();rd.onerror=no;rd.onload=()=>{const im=new Image();im.onerror=no;im.onload=()=>{const k=Math.min(1,1600/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;c.getContext("2d").drawImage(im,0,0,c.width,c.height);ok(c.toDataURL("image/jpeg",.8).split(",")[1])};im.src=rd.result};rd.readAsDataURL(f)});
+async function upFile(f,ctx){st("Mengunggah "+f.name+"…");
+if(f.type.startsWith("image")){const b=await imgB64(f);return enq(()=>api("upload",{...ctx,name:f.name,type:"image/jpeg",b64:b}))}
+if(f.size>MAXF)throw new Error("ukuran maksimal 100 MB");const t=f.type||"application/pdf";
+if(f.size<=CHK)return enq(async()=>api("upload",{...ctx,name:f.name,type:t,b64:await b64c(f)}));
+const init=await enq(()=>api("uploadInit",{...ctx,name:f.name,type:t,size:f.size}));let res;
+for(let s=0;s<f.size;s+=CHK){const e=Math.min(s+CHK,f.size);
+res=await enq(async()=>api("uploadChunk",{uri:init.uri,start:s,end:e,size:f.size,b64:await b64c(f.slice(s,e))}));
+st(`Mengunggah ${f.name} ${Math.round(e/f.size*100)}%`)}
+if(!res||!res.id)throw new Error("unggah belum selesai, coba lagi");return{id:res.id,n:f.name,t:t}}
+async function upl(id,fs){const r=S.rtp.find(x=>x.id==id);let ok=0;
+for(const f of fs){try{r.ev.push(await upFile(f,{incId:r.incId,rtpId:r.id}));ok++}catch(e){alert(f.name+": "+e.message)}}
+if(ok){r.log.push(`${new Date().toLocaleDateString("id-ID")}: ${ok} bukti ditambahkan`);save()}else st("");render()}
+async function uplInv(id,fs){const i=S.inc.find(x=>x.id==id);i.invReport=i.invReport||[];let ok=0;
+for(const f of fs){try{i.invReport.push(await upFile(f,{incId:id}));ok++}catch(e){alert(f.name+": "+e.message)}}
+if(ok)save();else st("");render()}
 /* ===== Field lengkap sesuai Excel, form input/edit ===== */
 const AGE=["19 - 20","21 - 25","26 - 30","31 - 35","36 - 40","41 - 45","46 - 50","50+"],HIRED=["0 - 1 Thn","1 - 3 Thn","3 - 5 Thn","5 - 10 Thn","10 Thn +"],KAGE=["00-03 Month","03-06 Month","06-09 Month","09-12 Month","1-2 years","2-3 years","3-5 years","5 years-Up"],YN=["Y","N"],DAYS=[...Array(14)].map((_,i)=>String(i+1));
 const FLD=[["co","Project Name / Subkon","combo"],["ir","Accident Report No"],["date","Date of Accident","date"],["time","Accident Time","sel",HRS],["day","Day (hari ke-)","sel",DAYS],["shift","Shift","sel",["1","2"]],["title","Name of Accident (judul)"],["dept","Department","combo"],["loc","Location","combo"],["unit","Unit Type","combo"],["dlMan","Daylost Man","number"],["dlUnit","Daylost Unit","number"],["cost","Estimated Cost TAR (Rp)","number"],["invStatus","Status Investigasi","sel",INV],["cls","Accident Classification","combo"],["jns","Jenis Accident","combo"]];
@@ -211,10 +226,6 @@ function invCard(i){const R=i.invReport||[],a=ME&&ME.role=="admin";
 return `<div class="card"><h3>Investigasi kecelakaan</h3><div class="row"><span class="tag ${invCls(i)}">${esc(invOf(i))}</span>${a?`<select onchange="setInv('${i.id}',this.value)">${INV.map(x=>`<option ${invOf(i)==x?"selected":""}>${x}</option>`).join("")}</select><label class="btn" style="margin:0;color:var(--tx)">📎 Unggah laporan penyelidikan<input type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" hidden onchange="uplInv('${i.id}',this.files)"></label>`:""}</div>${R.length?`<div class="ev">${R.map((e,k)=>`<span><a class="chip" target="_blank" rel="noopener" href="https://drive.google.com/file/d/${e.id}/view">📄 ${esc(e.n)}</a>${a?` <button onclick="delInv('${i.id}',${k})" title="Hapus dari daftar">✕</button>`:""}</span>`).join("")}</div>`:'<p class="mu">Belum ada laporan penyelidikan kecelakaan.</p>'}</div>`}
 function setInv(id,v){S.inc.find(x=>x.id==id).invStatus=v;save();render()}
 function delInv(id,k){if(!confirm("Hapus laporan ini dari daftar? (file tetap tersimpan di Google Drive)"))return;S.inc.find(x=>x.id==id).invReport.splice(k,1);save();render()}
-function uplInv(id,fs){const i=S.inc.find(x=>x.id==id);i.invReport=i.invReport||[];let n=fs.length,ok=0;
-const fin=()=>{if(!--n){if(ok)save();render()}};
-[...fs].forEach(f=>{const send=(b,t)=>enq(()=>api("upload",{incId:id,name:f.name,type:t,b64:b})).then(x=>{i.invReport.push(x);ok++;fin()}).catch(e=>{alert(f.name+": "+e.message);fin()});
-const rd=new FileReader();rd.onload=()=>{if(f.type.startsWith("image")){const im=new Image();im.onload=()=>{const k=Math.min(1,1600/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;c.getContext("2d").drawImage(im,0,0,c.width,c.height);send(c.toDataURL("image/jpeg",.8).split(",")[1],"image/jpeg")};im.src=rd.result}else if(f.size>5e6){alert(f.name+" > 5 MB, dilewati");fin()}else send(rd.result.split(",")[1],f.type||"application/pdf")};rd.readAsDataURL(f)})}
 /* ===== Login, navigasi, render ===== */
 function login(){nav();$("#app").innerHTML='<div class="card" style="max-width:380px;margin:40px auto;text-align:center"><h3>Masuk</h3><p class="mu">Gunakan akun Google yang sudah didaftarkan admin.</p><div id="g" style="display:inline-block"></div></div>';
 google.accounts.id.initialize({client_id:CLIENT_ID,callback:r=>{TOKEN=r.credential;sessionStorage.setItem("tk",TOKEN);start()}});google.accounts.id.renderButton($("#g"),{theme:"outline",size:"large"})}
