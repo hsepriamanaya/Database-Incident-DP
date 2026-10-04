@@ -115,6 +115,20 @@ main{padding:16px 14px calc(92px + env(safe-area-inset-bottom,0px))}
 .brand{flex-direction:column;align-items:stretch;gap:12px}
 @media(max-width:860px){.brand{flex-direction:row;align-items:center;gap:10px}
 .logo-box{width:auto;min-height:0;height:40px;padding:4px 8px;border-radius:10px;max-width:108px}.company-logo{max-height:30px;max-width:92px}.logo-fb{font-size:15px}}
+
+/* ===== Filter pilihan ganda ===== */
+.ms{position:relative;display:inline-block}
+.ms>summary{list-style:none;cursor:pointer;padding:9px 30px 9px 11px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx);position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px;user-select:none}
+.ms>summary::-webkit-details-marker{display:none}.ms>summary::after{content:"▾";position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--mu)}
+.ms.act>summary{border-color:var(--pr);background:color-mix(in srgb,var(--pr) 10%,var(--card));font-weight:600}
+.msp{position:absolute;z-index:40;top:calc(100% + 4px);left:0;width:290px;max-width:calc(100vw - 24px);background:var(--card);border:1px solid var(--bd);border-radius:12px;box-shadow:0 12px 32px #0f172a40;padding:10px}
+.msa{display:flex;gap:6px;margin:8px 0;flex-wrap:wrap}.msa button{padding:4px 10px;font-size:12px}
+.msl{max-height:240px;overflow:auto;display:grid;gap:2px}
+.msl label.ck{display:flex;gap:8px;align-items:center;margin:0;padding:6px 8px;border-radius:8px;color:var(--tx);font-size:13px;cursor:pointer}
+.msl label.ck:hover{background:color-mix(in srgb,var(--pr) 8%,transparent)}.msl input{width:auto;accent-color:var(--pr)}
+@media(max-width:860px){.row>.ms{flex:1 1 140px;min-width:0}.ms>summary{max-width:none}
+.msp{position:fixed;left:0!important;right:0!important;bottom:0;top:auto;width:auto;max-width:none;border-radius:16px 16px 0 0;z-index:120;max-height:75vh;overflow:auto;padding:14px 14px calc(14px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 30px #0008}
+.msl{max-height:42vh}.msl label.ck{padding:10px 8px;font-size:14px}}
 </style>
 </head><body>
 <div id="shell"><aside id="side"><div class="brand"><div class="logo-box"><img class="company-logo" src="https://lh3.googleusercontent.com/u/0/d/1OJofc87kqWPXwHzUr2YJqJeeSnfvmII6" alt="Logo PT Dizamatra Powerindo" referrerpolicy="no-referrer" decoding="async" onerror="logoFail(this)"><span class="logo-fb">DP</span></div><div><b>Portal Rekapitulasi Insiden & Monitoring RTP</b><small>PT. Dizamatra Powerindo – Lahat</small></div></div><nav id="nav"></nav><div id="usr"></div></aside><main id="app"></main></div><div id="st" onclick="flush()"></div><div id="lb" onclick="this.style.display='none'"><img id="lbi"></div>
@@ -136,7 +150,7 @@ const canon=(k,t)=>opts(k).find(x=>x.toLowerCase()==t.toLowerCase())||(UPPER.inc
 const INV=["Belum Dimulai","Sedang Investigasi","Selesai"],invOf=i=>INV.includes(i.invStatus)?i.invStatus:INV[0],invCls=i=>"inv"+INV.indexOf(invOf(i));
 const HRS=[...Array(24)].map((_,i)=>{const p=n=>String(n).padStart(2,"0");return `${p(i)}:01 - ${p(i+1)}:00`});
 const MON=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
-let V={p:"dash",id:null,co:"",q:"",m:"",rs:"",y:"",st:"",iv:"",pm:"both",dp:"",jb:"",lc:"",un:"",cl:"",jn:"",xo:false},CH=[];
+let V={p:"dash",id:null,q:"",pm:"both",xo:false,ms:"",rq:"",so:"urgent",vw:"",rn:30,y:[],co:[],st:[],iv:[],dp:[],jb:[],lc:[],un:[],cl:[],jn:[],m:[],rs:[],tm:[],ev:[],pc:[]},CH=[];
 const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const cnt=(a,f)=>{const m={};a.forEach(x=>{const k=f(x);if(k)m[k]=(m[k]||0)+1});return Object.entries(m).sort((a,b)=>b[1]-a[1])};
 const rp=i=>S.rtp.filter(r=>r.incId===i), idr=n=>n.toLocaleString("id-ID");
@@ -180,9 +194,9 @@ CH.push(new Chart(document.getElementById("c1"),{type:"line",data:{labels:MON.ma
 g(i=>i.co,"c2","bar",{h:1});g(i=>i.cls,"c3","doughnut");g(i=>i.jns,"c4","bar",{h:1});
 chart("c5","bar",HRS.map(h=>h.slice(0,5)),HRS.map(h=>d.filter(i=>i.time==h).length));
 g(i=>i.shift?(i.shift==1?"Day":"Night"):"","c6","doughnut");g(i=>i.dept,"c7","bar",{h:1});g(i=>i.loc,"c8","bar",{h:1});g(i=>i.unit,"c9","bar",{h:1});extra(d)}
-function list(){const d=F().filter(i=>(!V.q||(i.title+nm(i)+i.ir).toLowerCase().includes(V.q.toLowerCase()))&&(!V.m||i.mon==V.m));
-$("#app").innerHTML=`<div class="card"><div class="row"><input placeholder="Cari judul / nama (semua orang) / no. laporan" value="${esc(V.q)}" oninput="V.q=this.value;list2()" style="max-width:300px"><select onchange="V.m=this.value;render()"><option value="">Semua bulan</option>${MON.map(m=>`<option ${V.m==m?"selected":""}>${m}</option>`).join("")}</select>${selY()}${selC()}${selS()}${selI()}<span class="mu">${d.length} data</span></div>${selX()}<div class="wrap" id="tb"></div></div>`;list2()}
-function list2(){const d=F().filter(i=>(!V.q||(i.title+nm(i)+i.ir).toLowerCase().includes(V.q.toLowerCase()))&&(!V.m||i.mon==V.m));
+function list(){const d=F().filter(i=>(!V.q||(i.title+nm(i)+i.ir).toLowerCase().includes(V.q.toLowerCase()))&&has("m",i.mon));
+$("#app").innerHTML=`<div class="card"><div class="row"><input placeholder="Cari judul / nama (semua orang) / no. laporan" value="${esc(V.q)}" oninput="V.q=this.value;list2()" style="max-width:300px">${sel("m","Semua bulan",MON.map(m=>[m,m]))}${selY()}${selC()}${selS()}${selI()}<span class="mu">${d.length} data</span></div>${selX()}<div class="wrap" id="tb"></div></div>`;list2()}
+function list2(){const d=F().filter(i=>(!V.q||(i.title+nm(i)+i.ir).toLowerCase().includes(V.q.toLowerCase()))&&has("m",i.mon));
 $("#tb").innerHTML=`<table><tr><th>No. Laporan</th><th>Tanggal</th><th>Judul</th><th>Perusahaan</th><th>Klasifikasi</th><th>RTP</th><th>Investigasi</th><th>Status</th></tr>${d.map(i=>{const r=rp(i.id),k=r.filter(x=>x.status=="Done").length;return `<tr class="cl" onclick="go('detail','${i.id}')"><td>${esc(i.ir)}</td><td>${i.date}</td><td>${esc(i.title)}${(i.others||[]).length?` <span class="tag" title="Jumlah orang terlibat">👥 ${pp(i).length}</span>`:""}</td><td>${esc(i.co)}</td><td><span class="tag">${esc(i.cls)}</span></td><td>${r.length?k+"/"+r.length:"-"}</td><td><span class="tag ${invCls(i)}">${invOf(i)}</span></td><td><span class="tag ${stOf(i)}">${stOf(i)}</span></td></tr>`}).join("")}</table>`}
 const FLD_=(F,v)=>F.map(f=>fld(f,v[f[0]])).join("");
 const SECS=[["Informasi Kejadian",["ir","date","time","day","shift","co","title"]],["Lokasi & Unit",["dept","loc","unit"]],["Klasifikasi & Dampak",["cls","jns","dlMan","dlUnit","cost"]],["Investigasi",["invStatus"]],["Kronologi Singkat",["chrono"]]];
@@ -212,8 +226,37 @@ function rca(){const d=F(),c=RC.map((r,x)=>d.filter(i=>i.rc.includes(x)).length)
 $("#app").innerHTML=`<div class="row">${selY()}${selC()}${selS()}${selI()}${selP()}</div>${selX()}<div class="grid">${cardChart("Root cause – ringkasan 4 kelompok (% dari total penyebab)","r0")}${Object.keys(GRP).map(g=>cardChart(GRP[g]+" (% dari "+d.length+" insiden)","r"+g,300)).join("")}</div>`;
 chart("r0","bar",Object.values(GRP),Object.keys(GRP).map(g=>RC.reduce((a,r,x)=>a+(r[1]==g?c[x]:0),0)));
 Object.keys(GRP).forEach(g=>{const e=RC.map((r,x)=>[r[0],c[x]]).filter((_,x)=>RC[x][1]==g).sort((a,b)=>b[1]-a[1]);chart("r"+g,"bar",e.map(x=>x[0]),e.map(x=>x[1]),{h:1,total:d.length,unit:"insiden"})})}
-function rtpAll(){const A=S.rtp.filter(r=>(!V.rs||r.status==V.rs)&&(!V.y||yr(S.inc.find(i=>i.id==r.incId)||{})==V.y));
-$("#app").innerHTML=`<div class="row">${selY()}<select onchange="V.rs=this.value;render()"><option value="">Semua status</option><option value="Open">Open</option><option value="Progress">Dalam proses</option><option value="Done">Selesai</option></select><span class="mu">${A.length} RTP</span></div>${A.map(r=>{const i=S.inc.find(x=>x.id==r.incId)||{};return `<div><a href="#" onclick="go('detail','${i.id}');return false" style="color:var(--pr)">${esc(i.ir)} – ${esc(i.title)}</a>${rtpCard(r)}</div>`}).join("")||'<div class="card mu">Belum ada RTP. Buka sebuah insiden dari Daftar Insiden untuk menambahkannya.</div>'}`}
+/* ===== RTP & Bukti: ringkasan, filter ganda, tampilan tabel/kartu, unduh CSV ===== */
+const RS=[["Open","Open"],["Progress","Dalam proses"],["Done","Selesai"]],JD=["Terlambat","Jatuh tempo ≤7 hari","Belum jatuh tempo","Tanpa target","Selesai"],EVO=["Sudah ada bukti","Belum ada bukti"];
+const dl=r=>r.due?Math.round((Date.parse(r.due)-Date.parse(today()))/864e5):null;
+const jdOf=r=>r.status=="Done"?JD[4]:dl(r)==null?JD[3]:dl(r)<0?JD[0]:dl(r)<=7?JD[1]:JD[2],evOf=r=>(r.ev||[]).length?EVO[0]:EVO[1],rsL=s=>(RS.find(x=>x[0]==s)||[0,s])[1];
+function rtpSet(){const ids=new Set(F().map(i=>i.id)),IM=Object.fromEntries(S.inc.map(i=>[i.id,i])),q=(V.rq||"").trim().toLowerCase();
+const A=S.rtp.filter(r=>{const i=IM[r.incId];return i&&ids.has(r.incId)&&has("rs",r.status)&&has("tm",jdOf(r))&&has("ev",evOf(r))&&has("pc",r.pic||"(tanpa PIC)")&&(!q||[r.action,r.pic,i.ir,i.title,i.co].join(" ").toLowerCase().includes(q))});
+const pri=r=>JD.indexOf(jdOf(r)),dd=r=>dl(r)==null?1e9:dl(r);
+const cmp={urgent:(a,b)=>pri(a)-pri(b)||dd(a)-dd(b),due:(a,b)=>dd(a)-dd(b),prog:(a,b)=>(+a.progress||0)-(+b.progress||0),new:(a,b)=>String(IM[b.incId].date).localeCompare(String(IM[a.incId].date)),co:(a,b)=>String(IM[a.incId].co).localeCompare(String(IM[b.incId].co))}[V.so]||((a,b)=>0);
+return{A:A.sort(cmp),IM}}
+const rtpVw=()=>V.vw||(ME&&(ME.role=="admin"||ME.role=="pic")?"k":"t");
+function rtpAll(){const pics=[...new Set(S.rtp.map(r=>r.pic||"(tanpa PIC)"))].sort(),vw=rtpVw();
+$("#app").innerHTML=`<div class="row">${selY()}${selC()}${sel("rs","Semua status RTP",RS)}${sel("tm","Semua jadwal",JD.map(x=>[x,x]))}${sel("ev","Semua bukti",EVO.map(x=>[x,x]))}${sel("pc","Semua PIC",pics.map(x=>[x,x]))}${sel("st","Semua status insiden",[["Open","Open"],["Closed","Closed"]])}${selR()}</div>${selX()}
+<div class="row"><input id="rq" type="search" placeholder="Cari tindakan / PIC / no. laporan / judul" value="${esc(V.rq)}" oninput="rqIn(this.value)" style="max-width:340px"><select onchange="V.so=this.value;V.rn=30;render()">${[["urgent","Urutkan: paling mendesak"],["due","Target terdekat"],["prog","Progres terendah"],["new","Insiden terbaru"],["co","Perusahaan A–Z"]].map(([v,l])=>`<option value="${v}" ${V.so==v?"selected":""}>${l}</option>`).join("")}</select><button class="${vw=="t"?"on":""}" onclick="V.vw='t';render()">▤ Tabel</button><button class="${vw=="k"?"on":""}" onclick="V.vw='k';render()">▦ Kartu</button><button onclick="rtpCsv()">⬇ Unduh CSV</button></div><div id="rtpBody"></div>`;rtp2()}
+function rqIn(v){clearTimeout(window._rqt);window._rqt=setTimeout(()=>{V.rq=v;V.rn=30;rtp2()},250)}
+function rtp2(){CH.forEach(c=>c.destroy());CH=[];const{A,IM}=rtpSet(),n=A.length,vw=rtpVw(),done=A.filter(r=>r.status=="Done"),late=A.filter(r=>jdOf(r)==JD[0]),soon=A.filter(r=>jdOf(r)==JD[1]),noev=done.filter(r=>!(r.ev||[]).length),avg=n?Math.round(A.reduce((a,r)=>a+(+r.progress||0),0)/n):0;
+const G={};A.forEach(r=>{const c=IM[r.incId].co||"-",g=G[c]=G[c]||{c,inc:new Set(),t:0,d:0,l:0,ne:0,p:0};g.inc.add(r.incId);g.t++;g.p+=+r.progress||0;if(r.status=="Done"){g.d++;if(!(r.ev||[]).length)g.ne++}if(jdOf(r)==JD[0])g.l++});
+const GL=Object.values(G).sort((a,b)=>b.l-a.l||b.t-a.t),lim=V.rn||30,shown=A.slice(0,lim);
+const kpi=(b,s,c)=>`<div class="card kpi"${c?` style="border-top-color:${c}"`:""}><b${c?` style="color:${c}"`:""}>${b}</b><span>${s}</span></div>`;
+const jb=r=>{const d=dl(r),j=jdOf(r);return j==JD[0]?`<b style="color:var(--er)">Terlambat ${-d} hr</b>`:j==JD[1]?`<span style="color:var(--wa);font-weight:600">${d==0?"Hari ini":d+" hr lagi"}</span>`:j==JD[4]?"✓":"–"};
+const tbl=`<div class="card"><div class="wrap"><table><tr><th>No. Laporan</th><th>Perusahaan</th><th>Tindakan</th><th>PIC</th><th>Target</th><th>Sisa waktu</th><th>Progres</th><th>Status</th><th>Bukti</th></tr>${shown.map(r=>{const i=IM[r.incId];return `<tr class="cl" onclick="go('detail','${i.id}')"><td>${esc(i.ir)}</td><td>${esc(i.co)}</td><td>${esc(r.action)}</td><td>${esc(r.pic)||"-"}</td><td>${r.due||"-"}</td><td>${jb(r)}</td><td style="min-width:90px"><div class="bar"><i style="width:${+r.progress||0}%"></i></div>${+r.progress||0}%</td><td><span class="tag ${r.status}">${rsL(r.status)}</span></td><td>${(r.ev||[]).length?"📎 "+r.ev.length:"—"}</td></tr>`}).join("")}</table></div></div>`;
+const crd=shown.map(r=>{const i=IM[r.incId];return `<div><a href="#" onclick="go('detail','${i.id}');return false" style="color:var(--pr)">${esc(i.ir)} – ${esc(i.title)}</a> <span class="mu">· ${esc(i.co)}</span>${rtpCard(r)}</div>`}).join("");
+const jc=JD.map(x=>[x,A.filter(r=>jdOf(r)==x).length]).filter(x=>x[1]);
+$("#rtpBody").innerHTML=`<div class="kpis">${kpi(n,"Total RTP · "+new Set(A.map(r=>r.incId)).size+" insiden")}${kpi(done.length,"Selesai ("+pct(done.length,n)+")")}${kpi(A.filter(r=>r.status=="Progress").length+" / "+A.filter(r=>r.status=="Open").length,"Dalam proses / Open")}${kpi(late.length,"Terlambat ("+pct(late.length,n)+")","var(--er)")}${kpi(soon.length,"Jatuh tempo ≤ 7 hari","var(--wa)")}${kpi(noev.length,"Selesai tanpa bukti")}${kpi(avg+"%","Rata-rata progres")}</div>
+${n?`<div class="grid">${cardChart("Jadwal RTP","rj",260)}${cardChart("RTP per perusahaan","rk",Math.max(200,GL.length*34+60))}</div>
+<div class="card"><h3>Kinerja per perusahaan</h3><div class="wrap"><table><tr><th>Perusahaan</th><th>Insiden</th><th>RTP</th><th>Selesai</th><th>Terlambat</th><th>Selesai tanpa bukti</th><th>Rata-rata progres</th></tr>${GL.map(g=>{const av=Math.round(g.p/g.t);return `<tr><td>${esc(g.c)}</td><td>${g.inc.size}</td><td>${g.t}</td><td>${g.d} (${pct(g.d,g.t)})</td><td>${g.l?`<b style="color:var(--er)">${g.l}</b>`:0}</td><td>${g.ne}</td><td style="min-width:110px"><div class="bar"><i style="width:${av}%"></i></div>${av}%</td></tr>`}).join("")}</table></div></div>
+<div class="row"><span class="mu">Menampilkan ${shown.length} dari ${n} RTP${vw=="t"?" · klik baris untuk membuka insiden":""}</span></div>${vw=="t"?tbl:crd}${n>lim?`<div class="row" style="justify-content:center"><button onclick="V.rn=${lim+30};rtp2()">Tampilkan lebih banyak (${n-lim} lagi)</button></div>`:""}`:`<div class="card mu">${S.rtp.length?"Tidak ada RTP yang cocok dengan filter. Coba kurangi filter atau klik “Hapus semua filter”.":"Belum ada RTP. Buka sebuah insiden dari Daftar Insiden untuk menambahkannya."}</div>`}`;
+if(n){chart("rj","doughnut",jc.map(x=>x[0]),jc.map(x=>x[1]),{unit:"RTP"});chart("rk","bar",GL.map(g=>g.c),GL.map(g=>g.t),{h:1,unit:"RTP"})}}
+function rtpCsv(){const{A,IM}=rtpSet(),q=x=>{let s=String(x??"");if(/^[=+\-@\t\r]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"'};
+const H=["No. Laporan","Tanggal Insiden","Perusahaan","Judul Insiden","Tindakan (RTP)","PIC","Target","Status RTP","Progres (%)","Jadwal","Jumlah Bukti","Status Insiden"];
+const R=A.map(r=>{const i=IM[r.incId];return[i.ir,i.date,i.co,i.title,r.action,r.pic,r.due,rsL(r.status),r.progress,jdOf(r),(r.ev||[]).length,stOf(i)]});
+const b=new Blob(["\ufeff"+[H,...R].map(a=>a.map(q).join(";")).join("\r\n")],{type:"text/csv;charset=utf-8"}),l=document.createElement("a");l.href=URL.createObjectURL(b);l.download="RTP_"+today()+".csv";document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(l.href),1500)}
 
 /* ===== KONFIGURASI: isi dua nilai ini ===== */
 const API_URL="https://script.google.com/macros/s/AKfycbzGzLNBM9Vp8AABYMtpvY9TT8MTAJZokrCmA7KUeNCkrAXPbOoqqTp4_oV024HMhE9E/exec";
@@ -293,9 +336,25 @@ jobs.reduce((p,[a,d,id,j])=>p.then(()=>enq(()=>api(a,d)).then(()=>{j===null?dele
 /* ===== Filter tahun/status & closing insiden ===== */
 const yr=i=>String(i.date||"").slice(0,4),stOf=i=>i.status||"Open",today=()=>new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
 const years=()=>[...new Set(S.inc.map(yr).filter(Boolean))].sort().reverse();
-const F=()=>S.inc.filter(i=>(!V.y||yr(i)==V.y)&&(!V.co||i.co==V.co)&&(!V.st||stOf(i)==V.st)&&(!V.iv||invOf(i)==V.iv)&&(!V.dp||i.dept==V.dp)&&(!V.jb||pp(i).some(p=>p.pos==V.jb))&&(!V.lc||i.loc==V.lc)&&(!V.un||i.unit==V.un)&&(!V.cl||i.cls==V.cl)&&(!V.jn||i.jns==V.jn));
-const sel=(k,all,o)=>`<select onchange="V.${k}=this.value;render()"><option value="">${all}</option>${o.map(([v,l])=>`<option value="${esc(v)}" ${V[k]==v?"selected":""}>${esc(l)}</option>`).join("")}</select>`;
-const selY=()=>sel("y","Semua tahun",years().map(y=>[y,y])),selC=()=>sel("co","Semua perusahaan",opts("co").map(c=>[c,c])),selS=()=>sel("st","Semua status",[["Open","Open"],["Closed","Closed"]]),selI=()=>sel("iv","Semua investigasi",INV.map(x=>[x,x])),selX=()=>`<details ${V.xo?"open":""} ontoggle="V.xo=this.open" style="margin:-4px 0 12px"><summary class="mu" style="cursor:pointer">Filter lanjutan (departemen, jabatan, lokasi, unit, klasifikasi, jenis)</summary><div class="row" style="margin-top:8px">${[["dp","Semua departemen","dept"],["jb","Semua jabatan","pos"],["lc","Semua lokasi","loc"],["un","Semua unit","unit"],["cl","Semua klasifikasi","cls"],["jn","Semua jenis","jns"]].map(([k,a,f])=>sel(k,a,opts(f).map(x=>[x,x]))).join("")}</div></details>`,
+const has=(k,v)=>{const a=V[k];return !a||!a.length||a.includes(String(v??""))};
+const F=()=>S.inc.filter(i=>has("y",yr(i))&&has("co",i.co)&&has("st",stOf(i))&&has("iv",invOf(i))&&has("dp",i.dept)&&(!(V.jb&&V.jb.length)||pp(i).some(p=>has("jb",p.pos)))&&has("lc",i.loc)&&has("un",i.unit)&&has("cl",i.cls)&&has("jn",i.jns));
+/* ===== Filter pilihan ganda: kosong = semua; centang beberapa nilai sekaligus ===== */
+const ms=(k,all,o)=>{const a=V[k]||[],n=a.length,txt=n==0?all:n==1?(o.find(x=>String(x[0])==a[0])||[a[0],a[0]])[1]:n+" "+all.replace(/^Semua /,"");
+return `<details class="ms${n?" act":""}" data-k="${k}" ${V.ms==k?"open":""} ontoggle="if(this.open){V.ms='${k}';msPos(this)}"><summary>${esc(txt)}</summary><div class="msp"><input type="search" placeholder="Cari…" oninput="msq(this)"${o.length<8?' style="display:none"':""}><div class="msa"><button type="button" onclick="msAll('${k}')">Pilih semua</button><button type="button" onclick="msClr('${k}')">Hapus pilihan</button><button type="button" class="pri" onclick="msClose()">Selesai</button></div><div class="msl">${o.map(([v,l])=>`<label class="ck"><input type="checkbox" value="${esc(v)}" ${a.includes(String(v))?"checked":""} onchange="msT('${k}',this)"><span>${esc(l)}</span></label>`).join("")}</div></div></details>`};
+const sel=ms;
+const FK=["y","co","st","iv","dp","jb","lc","un","cl","jn","m","rs","tm","ev","pc"],anyF=()=>FK.some(k=>V[k]&&V[k].length)||!!V.q||!!V.rq,selR=()=>anyF()?`<button type="button" onclick="msReset()" title="Tampilkan semua data">↺ Hapus semua filter</button>`:"";
+function msRender(k){const q0=$(`.ms[data-k="${k}"] input[type=search]`),q=q0?q0.value:"",l0=$(`.ms[data-k="${k}"] .msl`),sc=l0?l0.scrollTop:0;V.ms=k;V.rn=30;render();
+const d=$(`.ms[data-k="${k}"]`);if(d){d.open=true;msPos(d);const l=d.querySelector(".msl");if(l)l.scrollTop=sc;const s=d.querySelector("input[type=search]");if(s&&q){s.value=q;msq(s)}}}
+function msT(k,el){const a=new Set(V[k]||[]);el.checked?a.add(el.value):a.delete(el.value);V[k]=[...a];msRender(k)}
+function msAll(k){const vis=[...document.querySelectorAll(`.ms[data-k="${k}"] .msl label:not(.hid) input`)].map(x=>x.value);V[k]=[...new Set([...(V[k]||[]),...vis])];msRender(k)}
+function msClr(k){V[k]=[];msRender(k)}
+function msReset(){FK.forEach(k=>V[k]=[]);V.q="";V.rq="";V.ms="";V.rn=30;render()}
+function msClose(){document.querySelectorAll(".ms[open]").forEach(d=>d.open=false);V.ms=""}
+function msq(i){const t=i.value.toLowerCase();i.closest(".msp").querySelectorAll(".msl label").forEach(l=>l.classList.toggle("hid",!!t&&!l.textContent.toLowerCase().includes(t)))}
+function msPos(d){const p=d.querySelector(".msp");if(!p)return;p.style.left="";p.style.right="";if(innerWidth>860){const r=p.getBoundingClientRect();if(r.right>innerWidth-8){p.style.left="auto";p.style.right="0"}}}
+document.addEventListener("click",e=>{document.querySelectorAll(".ms[open]").forEach(d=>{if(!d.contains(e.target)){d.open=false;if(V.ms==d.dataset.k)V.ms=""}})});
+document.addEventListener("keydown",e=>{if(e.key=="Escape")msClose()});
+const selY=()=>sel("y","Semua tahun",years().map(y=>[y,y])),selC=()=>sel("co","Semua perusahaan",opts("co").map(c=>[c,c])),selS=()=>sel("st","Semua status",[["Open","Open"],["Closed","Closed"]]),selI=()=>sel("iv","Semua investigasi",INV.map(x=>[x,x]))+selR(),selX=()=>`<details ${V.xo?"open":""} ontoggle="V.xo=this.open" style="margin:-4px 0 12px"><summary class="mu" style="cursor:pointer">Filter lanjutan (departemen, jabatan, lokasi, unit, klasifikasi, jenis)</summary><div class="row" style="margin-top:8px">${[["dp","Semua departemen","dept"],["jb","Semua jabatan","pos"],["lc","Semua lokasi","loc"],["un","Semua unit","unit"],["cl","Semua klasifikasi","cls"],["jn","Semua jenis","jns"]].map(([k,a,f])=>sel(k,a,opts(f).map(x=>[x,x]))).join("")}</div></details>`,
 selP=()=>`<select onchange="V.pm=this.value;render()" title="Label pada grafik">${[["both","Label: jumlah & %"],["n","Label: jumlah"],["p","Label: persentase"]].map(([v,l])=>`<option value="${v}" ${V.pm==v?"selected":""}>${l}</option>`).join("")}</select>`;
 function closeCard(i){const R=rp(i.id),miss=[];if(!R.length)miss.push("Belum ada RTP");R.forEach(r=>{if(r.status!="Done")miss.push(`RTP "${r.action}" belum selesai`);else if(!r.ev.length)miss.push(`RTP "${r.action}" belum ada bukti`)});
 if(stOf(i)=="Closed")return `<div class="card"><h3>Status insiden</h3><span class="tag Closed">CLOSED</span> ${esc(i.closeDate)} · oleh ${esc(i.closeBy)}<p>${esc(i.closeNote)||"-"}</p>${ME.role=="admin"?`<button onclick="reopen('${i.id}')">Buka kembali (reopen)</button>`:""}</div>`;
@@ -308,7 +367,7 @@ return `<div class="card"><h3>Investigasi kecelakaan</h3><div class="row"><span 
 function setInv(id,v){S.inc.find(x=>x.id==id).invStatus=v;save();render()}
 function delInv(id,k){if(!confirm("Hapus laporan ini dari daftar? (file tetap tersimpan di Google Drive)"))return;S.inc.find(x=>x.id==id).invReport.splice(k,1);save();render()}
 /* ===== Login, navigasi, render ===== */
-async function start(){$("#app").innerHTML='<p class="mu">Memuat data…</p>';try{S=await api("getAll");S.inc.forEach(i=>{if(!i.mon&&i.date)i.mon=MON[+i.date.slice(5,7)-1]||"";if(i.dept=="HR & GA")i.dept="HRGA";if(!Array.isArray(i.others))i.others=[]});snap();if(!V.y)V.y=years()[0]||"";render()}catch(e){if(e.message!="AUTH")$("#app").innerHTML='<div class="card">'+esc(e.message=="FORBIDDEN"?"Email Anda belum terdaftar di portal. Hubungi admin HSE.":e.message)+'</div>'}}
+async function start(){$("#app").innerHTML='<p class="mu">Memuat data…</p>';try{S=await api("getAll");S.inc.forEach(i=>{if(!i.mon&&i.date)i.mon=MON[+i.date.slice(5,7)-1]||"";if(i.dept=="HR & GA")i.dept="HRGA";if(!Array.isArray(i.others))i.others=[]});snap();if(!V.yi){V.yi=1;V.y=years()[0]?[years()[0]]:[]}render()}catch(e){if(e.message!="AUTH")$("#app").innerHTML='<div class="card">'+esc(e.message=="FORBIDDEN"?"Email Anda belum terdaftar di portal. Hubungi admin HSE.":e.message)+'</div>'}}
 
 /* ===== Login manual (username & password), navigasi, tampilan ===== */
 const ICO={dash:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',list:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',form:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',rca:'<circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M6 9v3a3 3 0 0 0 3 3h6"/>',rtp:'<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>'};
@@ -330,7 +389,7 @@ function logout(){TOKEN="";sessionStorage.removeItem("tk");V.p="dash";start()}
 window.onload=()=>start();
 
 /* ===== Daftar insiden versi kartu (HP) ===== */
-{const o=list2;list2=function(){o();const d=F().filter(i=>(!V.q||(i.title+nm(i)+i.ir).toLowerCase().includes(V.q.toLowerCase()))&&(!V.m||i.mon==V.m));
+{const o=list2;list2=function(){o();const d=F().filter(i=>(!V.q||(i.title+nm(i)+i.ir).toLowerCase().includes(V.q.toLowerCase()))&&has("m",i.mon));
 $("#tb").insertAdjacentHTML("beforeend",`<div class="cards">${d.map(i=>{const r=rp(i.id),k=r.filter(x=>x.status=="Done").length;return `<div class="ic" onclick="go('detail','${i.id}')"><div class="ic1"><span class="mu">${esc(i.ir)}</span><span class="tag ${stOf(i)}">${stOf(i)}</span></div><b>${esc(i.title)}</b><div class="ic2">${esc(i.date)} · ${esc(i.co)}</div><div class="ic3"><span class="tag">${esc(i.cls)}</span><span class="tag ${invCls(i)}">${esc(invOf(i))}</span><span class="tag">RTP ${r.length?k+"/"+r.length:"-"}</span></div></div>`}).join("")}</div>`)}}
 
 /* ===== Hak akses PIC per perusahaan ===== */
