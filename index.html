@@ -131,6 +131,7 @@ main{padding:16px 14px calc(92px + env(safe-area-inset-bottom,0px))}
 .msp{position:fixed;left:0!important;right:0!important;bottom:0;top:auto;width:auto;max-width:none;border-radius:16px 16px 0 0;z-index:120;max-height:75vh;overflow:auto;padding:14px 14px calc(14px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 30px #0008}
 .msl{max-height:42vh}.msl label.ck{padding:10px 8px;font-size:14px}}
 </style>
+<base target="_blank">
 </head><body>
 <div id="shell"><aside id="side"><div class="brand"><div class="logo-box"><img class="company-logo" src="https://lh3.googleusercontent.com/u/0/d/1OJofc87kqWPXwHzUr2YJqJeeSnfvmII6" alt="Logo PT Dizamatra Powerindo" referrerpolicy="no-referrer" decoding="async" onerror="logoFail(this)"><span class="logo-fb">DP</span></div><div><b>Portal Rekapitulasi Insiden & Monitoring RTP</b><small>PT. Dizamatra Powerindo – Lahat</small></div></div><nav id="nav"></nav><div id="usr"></div></aside><main id="app"></main></div><div id="st" onclick="flush()"></div><div id="lb" onclick="this.style.display='none'"><img id="lbi"></div>
 <script>
@@ -424,79 +425,104 @@ function lapSave(id){const i=S.inc.find(x=>x.id==id),d=Object.assign({},LD);dele
 async function lapDocx(id,toDrive){if(!window.docx){alert("Pustaka Word (docx.js) belum termuat. Periksa koneksi internet, lalu muat ulang halaman.");return}
 const i=S.inc.find(x=>x.id==id);if(!i)return;{const miss=[!i.rc.length&&"Root cause",!rp(i.id).length&&"RTP"].filter(Boolean);if(miss.length&&!confirm(miss.join(" dan ")+" belum diisi, jadi bagian itu akan kosong di dokumen. Tetap lanjutkan?"))return}const P=pp(i),P0=P[0]||{},D=LD;st("Menyusun dokumen Word…");
 try{
-const {Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,WidthType,AlignmentType,ImageRun,BorderStyle,VerticalAlign}=docx;
-const BD={style:BorderStyle.SINGLE,size:2,color:"666666"},BR={top:BD,bottom:BD,left:BD,right:BD},NB={style:BorderStyle.NONE,size:0},NBR={top:NB,bottom:NB,left:NB,right:NB};
-const T=(t,o={})=>new TextRun({text:String(t??""),bold:!!o.b,italics:!!o.i,font:"Arial",size:o.s||18});
-const par=(t,o={})=>new Paragraph({alignment:o.a,spacing:{after:o.sp??60},children:Array.isArray(t)?t:[T(t,o)]});
-const cell=(t,o={})=>new TableCell({borders:BR,columnSpan:o.cs,verticalAlign:VerticalAlign.TOP,width:o.w?{size:o.w,type:WidthType.PERCENTAGE}:undefined,children:o.ch||String(t??"").split("\n").map(l=>par(l,{b:o.b}))});
-const row=c=>new TableRow({children:c});
+const {Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,WidthType,AlignmentType,ImageRun,BorderStyle,VerticalAlign,Header,Footer,PageNumber,ShadingType,HeightRule}=docx;
+const BD={style:BorderStyle.SINGLE,size:2,color:"808080"},BR={top:BD,bottom:BD,left:BD,right:BD},NB={style:BorderStyle.NONE,size:0},NBR={top:NB,bottom:NB,left:NB,right:NB};
+const MRG={top:70,bottom:70,left:110,right:110};
+const T=(t,o={})=>new TextRun({text:String(t??""),bold:!!o.b,italics:!!o.i,font:"Arial",size:o.s||18,color:o.c});
+const par=(t,o={})=>new Paragraph({alignment:o.a,spacing:{after:o.sp??60},indent:o.ind,children:Array.isArray(t)?t:[T(t,o)]});
+const cell=(t,o={})=>new TableCell({borders:o.nb?NBR:BR,columnSpan:o.cs,verticalAlign:o.va||VerticalAlign.CENTER,width:o.w?{size:o.w,type:WidthType.PERCENTAGE}:undefined,margins:MRG,shading:o.sh?{type:ShadingType.CLEAR,color:"auto",fill:o.sh}:undefined,children:o.ch||String(t??"").split("\n").map(l=>par(l,{b:o.b,a:o.a}))});
+const row=(c,o={})=>new TableRow(Object.assign({children:c},o&&o.h?{height:{value:o.h,rule:HeightRule.AT_LEAST}}:{},o&&o.th?{tableHeader:true}:{}));
 const tbl=rows=>new Table({width:{size:100,type:WidthType.PERCENTAGE},rows});
+const gap=()=>par("",{sp:40});
 const chk=(on,l)=>T((on?"☒ ":"☐ ")+l+"   ");
-const H=(n,t)=>par([T(n+". "+t,{b:true,s:22})],{sp:140});
+const H=(n,t)=>new Paragraph({spacing:{before:260,after:100},border:{bottom:{style:BorderStyle.SINGLE,size:8,color:"404040",space:3}},children:[T(n+". "+t,{b:true,s:22})]});
+const hd=(t,o={})=>cell(t,Object.assign({b:1,sh:"D9D9D9",a:AlignmentType.CENTER},o));
+const lbl=(t,o={})=>cell(t,Object.assign({b:1,sh:"F2F2F2"},o));
+const numList=arr=>arr.map((t,n)=>new Paragraph({indent:{left:340,hanging:200},spacing:{after:40},children:[T(n+1+". "),T(t)]}));
+const tglS=d=>{if(!d)return"";const t=new Date(d+"T00:00:00");if(isNaN(t))return String(d);return t.getDate()+" "+MON[t.getMonth()]+" "+t.getFullYear()};
 const names=P.map(p=>p.name).filter(Boolean).join(", ");
 const jc=[["Kematian (Fatality)",/fatality/i],["Cedera (Injury)",/lost time|restricted|treatment|first aid/i],["Kerusakan Peralatan (Property Damage)",/property/i],["Lingkungan (Environment)",/environment/i],["Hampir Celaka (Near Miss)",/nearmiss/i]];
 const jHit=jc.findIndex(x=>x[1].test(i.cls||"")),jItems=[...jc.map(x=>x[0]),"Kejadian Lain"+(D.jenisLain?": "+D.jenisLain:"")];
 const BP=["Mata","Lengan","Punggung","Batang Tubuh","Tangan","Kaki","Tungkai","Jari Tangan","Jari Kaki","Kepala","Dahi/Pelipis","Sistem Tubuh"];
 const injAll=[...new Set(P.flatMap(p=>injs(p)).map(x=>x.toUpperCase()))];
 const bpOn=b=>injAll.some(x=>x==b.toUpperCase()),bpLain=injAll.some(x=>x!="NIHIL"&&!BP.some(b=>b.toUpperCase()==x));
-const ica=[[/fatality/i,"FA (Fatal Accident)"],[/lost time/i,"LTI (Lost Time Injury)"],[/treatment/i,"MTI (Medical Treatment Injury)"],[/first aid/i,"FAI (First Aid Injury)"]];
+const icaCls=[[/fatality/i,"FA (Fatal Accident)"],[/lost time/i,"LTI (Lost Time Injury)"],[/treatment/i,"MTI (Medical Treatment Injury)"],[/first aid/i,"FAI (First Aid Injury)"]];
 const imgType=buf=>{const b=new Uint8Array(buf.slice(0,4));return b[0]==0x89&&b[1]==0x50?"png":b[0]==0xff&&b[1]==0xd8?"jpg":b[0]==0x47&&b[1]==0x49?"gif":"png"};
 const imgPar=o=>{const w=Math.min(430,o.w||430);return new Paragraph({alignment:AlignmentType.CENTER,children:[new ImageRun({type:imgType(o.buf),data:o.buf,transformation:{width:w,height:Math.round(w*(o.h||300)/(o.w||430))}})]})};
-const imgGrid=(arr,cap)=>{const NR=[];for(let k=0;k<arr.length;k+=2)NR.push(row(arr.slice(k,k+2).map((o,x)=>new TableCell({borders:NBR,width:{size:50,type:WidthType.PERCENTAGE},children:[imgPar(o),par(cap+" "+(k+x+1),{a:AlignmentType.CENTER})]}))));return tbl(NR)};
-const krit=(on,txt)=>tbl([row([cell("",{w:24,ch:[par([T("Ya  ",{b:1}),chk(on=="Ya",""),T(" Tidak  ",{b:1}),chk(on!="Ya","")])]}),cell("",{w:76,ch:txt.split("\n").map(l=>par(l))})])]);
-const rcSel=RC.map((r,x)=>i.rc.includes(x)?r[0]:null).filter(Boolean),rcTxt=rcSel.join("; "),R=rp(i.id);
-const bd4=(a,b,c,d)=>row([cell(a,{b:1,w:23}),cell(b,{w:27}),cell(c,{b:1,w:23}),cell(d,{w:27})]);
+const imgGrid=(arr,cap)=>{const NR=[];for(let k=0;k<arr.length;k+=2)NR.push(row(arr.slice(k,k+2).map((o,x)=>new TableCell({borders:NBR,width:{size:50,type:WidthType.PERCENTAGE},margins:MRG,children:[imgPar(o),par(cap+" "+(k+x+1),{a:AlignmentType.CENTER})]}))));return tbl(NR)};
+const krit=(on,items)=>tbl([row([cell("",{w:22,ch:[new Paragraph({alignment:AlignmentType.CENTER,children:[T("Ya  ",{b:1}),chk(on=="Ya",""),T(" Tidak  ",{b:1}),chk(on!="Ya","")]})]}),cell("",{w:78,ch:[par("Kriteria terpenuhi apabila memenuhi "+items.length+" unsur berikut:",{sp:60}),...numList(items)]})])]);
+const rcSel=RC.map((r,x)=>i.rc.includes(x)?r[0]:null).filter(Boolean),R=rp(i.id);
+const bd4=(a,b,c,d)=>row([lbl(a,{w:24}),cell(b,{w:26}),lbl(c,{w:24}),cell(d,{w:26})]);
+const header=new Header({children:[new Paragraph({alignment:AlignmentType.RIGHT,border:{bottom:{style:BorderStyle.SINGLE,size:4,color:"BFBFBF",space:2}},children:[T("LAPORAN HASIL INVESTIGASI — "+(i.ir||"-"),{s:14,c:"595959"})]})]});
+const footer=new Footer({children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({font:"Arial",size:14,color:"595959",children:["Halaman ",PageNumber.CURRENT," dari ",PageNumber.TOTAL_PAGES]})]})]});
 const C=[];
 C.push(par([T("LAPORAN HASIL INVESTIGASI KEJADIAN / KECELAKAAN",{b:true,s:28})],{a:AlignmentType.CENTER,sp:40}));
-C.push(par([T("Nomor: "+(i.ir||"-"),{s:20})],{a:AlignmentType.CENTER,sp:220}));
+C.push(par([T("Nomor: "+(i.ir||"-"),{b:1,s:20})],{a:AlignmentType.CENTER,sp:200}));
 C.push(H(1,"Biodata"));
-C.push(tbl([bd4("Hari/Tanggal Kejadian",tglID(i.date),"Nama Karyawan yang Terlibat Kejadian",names),
-bd4("Waktu Kejadian",(i.time||"-")+" WIB","ID No",P0.nik||""),
-bd4("Shift",(i.shift==1?"Siang":i.shift==2?"Malam":"-")+", hari ke "+(i.day||"-"),"Jabatan",P0.pos||""),
-bd4("Peralatan/Fasilitas yang Terlibat",i.unit||"","Departemen/Divisi/Perusahaan",i.dept||""),
-bd4("Tanggal Pelaporan",tglID(D.tglLaporan),"Umur",P0.age||""),
-bd4("Lokasi Kejadian",i.loc||"","Masa Kerja",P0.hired||""),
-bd4("Perusahaan",i.co||"","Atasan Langsung",D.atasan||"")]));
+C.push(tbl([bd4("Hari/Tanggal Kejadian",tglID(i.date)||"-","Nama Karyawan yang Terlibat Kejadian",names||"-"),
+bd4("Waktu Kejadian",(i.time||"-")+" WIB","ID No",P0.nik||"-"),
+bd4("Shift",(i.shift==1?"Siang":i.shift==2?"Malam":"-")+", hari ke-"+(i.day||"-"),"Jabatan",P0.pos||"-"),
+bd4("Peralatan/Fasilitas yang Terlibat",i.unit||"-","Departemen/Divisi/Perusahaan",i.dept||"-"),
+bd4("Tanggal Pelaporan",tglID(D.tglLaporan)||"-","Umur",P0.age||"-"),
+bd4("Lokasi Kejadian",i.loc||"-","Masa Kerja",P0.hired||"-"),
+bd4("Perusahaan",i.co||"-","Atasan Langsung",D.atasan||"-")]));
 C.push(H(2,"Jenis Kejadian/Kecelakaan"));
-C.push(tbl([row([cell("",{ch:[par(jItems.map((l,k)=>chk(k==jHit||(jHit<0&&k==5),l)))]})])]));
+C.push(tbl([row([cell("",{ch:[new Paragraph({alignment:AlignmentType.CENTER,children:jItems.map((l,k)=>chk(k==jHit||(jHit<0&&k==5),l))})]})])]));
 C.push(H(3,"Kejadian Berbahaya"));
-C.push(krit(D.berbahaya,"Kriteria kejadian berbahaya apabila memenuhi 4 unsur, terdiri dari: 1. Benar-benar terjadi, yaitu tidak diinginkan, tidak direncanakan dan tidak ada unsur kesengajaan; 2. Berpotensi mengakibatkan kematian atau terhentinya kegiatan lebih dari 24 jam; 3. Akibat kegiatan usaha pertambangan, pengolahan dan/atau pemurnian, kegiatan penunjang lainnya, kegagalan teknis, sarana, prasarana, instalasi dan peralatan pertambangan, atau kegagalan mengantisipasi faktor alam; dan 4. Terjadi di wilayah kegiatan usaha pertambangan atau pengolahan dan/atau pemurnian atau wilayah proyek."));
+C.push(krit(D.berbahaya,["Benar-benar terjadi, yaitu tidak diinginkan, tidak direncanakan, dan tidak ada unsur kesengajaan;","Berpotensi mengakibatkan kematian atau terhentinya kegiatan lebih dari 24 jam;","Akibat kegiatan usaha pertambangan, pengolahan dan/atau pemurnian, kegiatan penunjang lainnya, kegagalan teknis, sarana, prasarana, instalasi dan peralatan pertambangan, atau kegagalan mengantisipasi faktor alam; dan","Terjadi di wilayah kegiatan usaha pertambangan atau pengolahan dan/atau pemurnian atau wilayah proyek."]));
 C.push(H(4,"Kecelakaan Tambang"));
-C.push(krit(D.kecTambang,"Kriteria kecelakaan tambang apabila memenuhi 5 unsur, terdiri dari: 1. benar-benar terjadi, yaitu tidak diinginkan, tidak direncanakan, dan tanpa unsur kesengajaan; 2. mengakibatkan cidera pekerja tambang atau orang yang diberi izin oleh kepala teknik tambang (KTT) atau penanggungjawab teknik dan lingkungan (PTL); 3. akibat kegiatan usaha pertambangan atau pengolahan dan/atau pemurnian atau akibat kegiatan penunjang lainnya; 4. terjadi pada jam kerja pekerja tambang yang mendapat cidera atau setiap saat orang yang diberi izin; dan 5. terjadi di dalam wilayah kegiatan usaha pertambangan atau wilayah proyek."));
+C.push(krit(D.kecTambang,["Benar-benar terjadi, yaitu tidak diinginkan, tidak direncanakan, dan tanpa unsur kesengajaan;","Mengakibatkan cidera pekerja tambang atau orang yang diberi izin oleh Kepala Teknik Tambang (KTT) atau Penanggung Jawab Teknik dan Lingkungan (PTL);","Akibat kegiatan usaha pertambangan atau pengolahan dan/atau pemurnian atau akibat kegiatan penunjang lainnya;","Terjadi pada jam kerja pekerja tambang yang mendapat cidera atau setiap saat orang yang diberi izin; dan","Terjadi di dalam wilayah kegiatan usaha pertambangan atau wilayah proyek."]));
 C.push(H(5,"Rincian Kejadian/Kecelakaan"));
-C.push(par([T("Rincian Cedera",{b:1})]));
-C.push(tbl([row([cell("Bagian Tubuh yang Cedera",{b:1,w:56}),cell("Perkiraan Hari Hilang",{b:1,w:20}),cell("Perkiraan Biaya (Rp)",{b:1,w:24})]),
-row([cell("",{ch:[par([...BP.map(b=>chk(bpOn(b),b)),chk(bpLain,"Lainnya")])]}),cell(i.dlMan||""),cell(i.cost?"Rp "+idr(+i.cost):"")]),
-row([cell("Rumah sakit / Puskesmas / Poliklinik Rujukan",{b:1}),cell(D.rs||""),cell("Dokter yang Merawat: "+(D.dokter||"-"))]),
-row([cell("",{cs:3,ch:[par([T("Klasifikasi cidera/injury (berdasarkan rekomendasi dokter): ",{b:1})]),par(ica.map(x=>chk(x[0].test(i.cls||""),x[1]+(/lost time/i.test(i.cls||"")&&x[1].slice(0,3)=="LTI"?" ("+(i.dlMan||0)+" hari)":""))))]})])]));
-C.push(par([T("Rincian Kerusakan Peralatan",{b:1})]));
-C.push(tbl([row([cell("No",{b:1,w:6}),cell("Nama komponen alat/fasilitas yang mengalami kerusakan",{b:1,w:54}),cell("Hari hilang",{b:1,w:15}),cell("Perkiraan Biaya (Rp)",{b:1,w:25})]),...D.rusakAlat.map((r,n)=>row([cell(n+1),cell(r.nama),cell(r.hari),cell(r.biaya)]))]));
-C.push(par([T("Rincian Kerusakan Lingkungan",{b:1})]));C.push(par(D.rusakLingk||"Tidak Ada"));
+C.push(par([T("Rincian Cedera",{b:1})],{sp:80}));
+C.push(tbl([row([hd("Bagian Tubuh yang Cedera",{w:56}),hd("Perkiraan Hari Hilang",{w:20}),hd("Perkiraan Biaya (Rp)",{w:24})],{th:1}),
+row([cell("",{ch:[par([...BP.map(b=>chk(bpOn(b),b)),chk(bpLain,"Lainnya")])]}),cell(i.dlMan||"-",{a:AlignmentType.CENTER}),cell(i.cost?"Rp "+idr(+i.cost):"-",{a:AlignmentType.CENTER})]),
+row([lbl("Rumah Sakit / Puskesmas / Poliklinik Rujukan"),cell(D.rs||"-"),cell("Dokter yang Merawat: "+(D.dokter||"-"))]),
+row([cell("",{cs:3,ch:[par([T("Klasifikasi cidera/injury (berdasarkan rekomendasi dokter):",{b:1})],{sp:40}),par(icaCls.map(x=>chk(x[0].test(i.cls||""),x[1]+(/lost time/i.test(i.cls||"")&&x[1].slice(0,3)=="LTI"?" ("+(i.dlMan||0)+" hari)":""))))]})])]));
+C.push(gap());
+C.push(par([T("Rincian Kerusakan Peralatan",{b:1})],{sp:80}));
+C.push(tbl([row([hd("No",{w:6}),hd("Nama Komponen Alat/Fasilitas yang Mengalami Kerusakan",{w:54}),hd("Hari Hilang",{w:15}),hd("Perkiraan Biaya (Rp)",{w:25})],{th:1}),...(D.rusakAlat.length?D.rusakAlat:[{nama:"-",hari:"",biaya:""}]).map((r,n)=>row([cell(n+1,{a:AlignmentType.CENTER}),cell(r.nama||"-"),cell(r.hari||"-",{a:AlignmentType.CENTER}),cell(r.biaya||"-",{a:AlignmentType.CENTER})]))]));
+C.push(gap());
+C.push(par([T("Rincian Kerusakan Lingkungan",{b:1})],{sp:80}));
+C.push(tbl([row([cell(D.rusakLingk||"Tidak Ada")])]));
 C.push(H(6,"Kronologi Kejadian/Kecelakaan"));
-C.push(tbl([row(["No","Tanggal","Waktu","Uraian Kronologi","Bukti"].map((h,k)=>cell(h,{b:1,w:[6,15,10,54,15][k]}))),...D.kronologi.map((r,n)=>row([cell(n+1),cell(r.tgl),cell(r.waktu),cell(r.uraian),cell(r.bukti)]))]));
+C.push(tbl([row([hd("No",{w:6}),hd("Tanggal",{w:16}),hd("Waktu",{w:10}),hd("Uraian Kronologi",{w:53}),hd("Bukti",{w:15})],{th:1}),...(D.kronologi.length?D.kronologi:[{tgl:"",waktu:"",uraian:"-",bukti:""}]).map((r,n)=>row([cell(n+1,{a:AlignmentType.CENTER}),cell(tglS(r.tgl)||"-",{a:AlignmentType.CENTER}),cell(r.waktu||"-",{a:AlignmentType.CENTER}),cell(r.uraian||"-"),cell(r.bukti||"-")]))]));
 if(LIMG.sketsa.length){C.push(H(7,"Sketsa Kejadian/Kecelakaan"));C.push(imgGrid(LIMG.sketsa,"Gambar"))}
 if(D.wawancara){C.push(H(8,"Hasil Wawancara"));String(D.wawancara).split("\n").forEach(l=>C.push(par(l)))}
 if(LIMG.foto.length){C.push(H(9,"Foto Kejadian"));C.push(imgGrid(LIMG.foto,"Foto"))}
 C.push(H(10,"Hasil Penyelidikan Kejadian/Kecelakaan"));
-C.push(tbl([row(["Tim Investigasi","Nama","ID No.","Jabatan","Departemen"].map((h,k)=>cell(h,{b:1,w:[18,28,12,21,21][k]}))),...D.tim.map(r=>row([cell(r.peran),cell(r.nama),cell(r.idno),cell(r.jabatan),cell(r.dept)]))]));
-C.push(par([T("Saksi-Saksi",{b:1})],{sp:100}));
-C.push(tbl([row(["Nama","ID No.","Jabatan","Departemen"].map((h,k)=>cell(h,{b:1,w:[30,15,27,28][k]}))),...D.saksi.map(r=>row([cell(r.nama),cell(r.idno),cell(r.jabatan),cell(r.dept)]))]));
-C.push(par([T("Fakta-fakta hasil penyelidikan 4P",{b:1})],{sp:100}));
-[["PEOPLE","people","Jelaskan peran personil yang terlibat sehingga berkontribusi menyebabkan terjadinya kecelakaan"],["PART","part","Jelaskan peran alat/part yang terlibat sehingga berkontribusi menyebabkan terjadinya kecelakaan"],["POSITION & LINGKUNGAN","position","Jelaskan posisi/lingkungan yang berkontribusi menyebabkan terjadinya kecelakaan"],["PAPER","paper","Data pendukung/sistem yang berkontribusi atas terjadinya kecelakaan"]].forEach(x=>{C.push(tbl([row([cell(x[0],{b:1,w:24}),cell(x[2],{b:1,w:76})]),row([cell("TIM INVESTIGASI",{b:1}),cell(D.p4[x[1]]||"-")])]))});
+C.push(tbl([row(["Tim Investigasi","Nama","ID No.","Jabatan","Departemen"].map((h,k)=>hd(h,{w:[18,28,12,21,21][k]}))),...D.tim.map(r=>row([cell(r.peran,{b:1}),cell(r.nama||"-"),cell(r.idno||"-",{a:AlignmentType.CENTER}),cell(r.jabatan||"-"),cell(r.dept||"-")]))]));
+C.push(gap());
+C.push(par([T("Saksi-Saksi",{b:1})],{sp:80}));
+C.push(tbl([row(["Nama","ID No.","Jabatan","Departemen"].map((h,k)=>hd(h,{w:[30,15,27,28][k]}))),...D.saksi.map(r=>row([cell(r.nama||"-"),cell(r.idno||"-",{a:AlignmentType.CENTER}),cell(r.jabatan||"-"),cell(r.dept||"-")]))]));
+C.push(gap());
+C.push(par([T("Fakta-Fakta Hasil Penyelidikan 4P",{b:1})],{sp:80}));
+[["PEOPLE","people","Jelaskan peran personil yang terlibat sehingga berkontribusi menyebabkan terjadinya kecelakaan"],["PART","part","Jelaskan peran alat/part yang terlibat sehingga berkontribusi menyebabkan terjadinya kecelakaan"],["POSITION & LINGKUNGAN","position","Jelaskan posisi/lingkungan yang berkontribusi menyebabkan terjadinya kecelakaan"],["PAPER","paper","Data pendukung/sistem yang berkontribusi atas terjadinya kecelakaan"]].forEach(x=>{C.push(tbl([row([lbl(x[0],{w:22,a:AlignmentType.CENTER}),cell(x[2],{b:1,sh:"F2F2F2",w:78})]),row([cell("TIM INVESTIGASI",{b:1,a:AlignmentType.CENTER}),cell(D.p4[x[1]]||"-")])]));C.push(gap())});
 C.push(H(11,"Analisa Penyebab Kecelakaan"));
-C.push(tbl([row([1,2,3,4,5].map(n=>cell("Penyebab "+n+(n>1?"\nSebab dari sebab "+(n-1):""),{b:1,w:20}))),...D.why.map(r=>row([0,1,2,3,4].map(c=>cell(r[c]||"",{w:20}))))]));
-C.push(H(12,"Panduan Analisa Kecelakaan ICA (penyebab terpilih)"));
-Object.keys(GRP).forEach(g=>{const its=RC.map((r,x)=>r[1]==g&&i.rc.includes(x)?r[0]:null).filter(Boolean);C.push(par([T(GRP[g]+": ",{b:1}),T(its.length?its.join("; "):"-")]))});
+C.push(tbl([row([1,2,3,4,5].map(n=>hd("Penyebab "+n+(n>1?"\n(Sebab dari Sebab "+(n-1)+")":""),{w:20})),{th:1}),...D.why.map(r=>row([0,1,2,3,4].map(c=>cell(r[c]||"-"))))]));
+C.push(H(12,"Panduan Analisa Kecelakaan ICA"));
+C.push(par("Berdasarkan panduan analisa kecelakaan ICA, faktor penyebab yang teridentifikasi pada kejadian ini ditandai dengan ☒ pada tabel berikut:",{sp:80}));
+const icaRows=[row([hd("Kategori",{w:26}),hd("Faktor Penyebab",{w:74})],{th:1})];
+Object.keys(GRP).forEach(g=>{const items=RC.map((r,x)=>r[1]==g?{t:r[0],on:i.rc.includes(x)}:null).filter(Boolean);
+icaRows.push(row([cell(GRP[g],{b:1,sh:"F2F2F2",va:VerticalAlign.CENTER}),cell("",{ch:items.map(it=>new Paragraph({spacing:{after:30},children:[T(it.on?"☒ ":"☐ "),T(it.t,{b:it.on})]}))})]))});
+C.push(tbl(icaRows));
 C.push(H(13,"Rekomendasi Tindakan Perbaikan"));
-C.push(tbl([row(["No","Penyebab-penyebab yang teridentifikasi","Tindakan Perbaikan","PIC","Batas waktu"].map((h,k)=>cell(h,{b:1,w:[6,32,32,15,15][k]}))),...(R.length?R:[{action:"-",pic:"",due:""}]).map((r,n)=>row([cell(n+1),cell(rcTxt||"-"),cell(r.action),cell(r.pic||"-"),cell(r.due||"-")]))]));
+C.push(par([T("Penyebab-penyebab yang teridentifikasi:",{b:1})],{sp:60}));
+if(rcSel.length)numList(rcSel).forEach(p=>C.push(p));else C.push(par("-",{sp:60}));
+C.push(par([T("Rencana Tindakan Perbaikan (RTP):",{b:1})],{sp:60}));
+const ST={Open:"Open",Progress:"Dalam Proses",Done:"Selesai"};
+C.push(tbl([row(["No","Tindakan Perbaikan","PIC","Batas Waktu","Status"].map((h,k)=>hd(h,{w:[6,46,16,16,16][k]}))),...(R.length?R:[{action:"-",pic:"-",due:"",status:"-"}]).map((r,n)=>row([cell(n+1,{a:AlignmentType.CENTER}),cell(r.action||"-"),cell(r.pic||"-",{a:AlignmentType.CENTER}),cell(r.due?tglS(r.due):"-",{a:AlignmentType.CENTER}),cell(ST[r.status]||r.status||"-",{a:AlignmentType.CENTER})]))]));
 C.push(H(14,"Persetujuan Laporan Hasil Investigasi"));
-C.push(tbl([row(["Posisi","Nama","Tanda Tangan","Tanggal"].map((h,k)=>cell(h,{b:1,w:[34,26,20,20][k]}))),...D.persetujuan.map(r=>row([cell(r.posisi),cell(r.nama),cell(""),cell("")])),row([cell("Memeriksa dan Menyetujui:",{b:1,cs:4})]),row([cell("Departemen K3"),cell(D.persetujuan[0]?D.persetujuan[0].nama:""),cell(""),cell("")]),row([cell("KEPALA TEKNIK TAMBANG",{b:1}),cell(D.kttNama||""),cell(""),cell("")])]));
+C.push(tbl([row(["Posisi","Nama","Tanda Tangan","Tanggal"].map((h,k)=>hd(h,{w:[34,26,20,20][k]}))),
+...D.persetujuan.map(r=>row([cell(r.posisi,{b:1}),cell(r.nama),cell(""),cell("")],{h:620})),
+row([cell("Memeriksa dan Menyetujui:",{b:1,sh:"F2F2F2",cs:4})]),
+row([cell("Departemen K3",{b:1}),cell(""),cell(""),cell("")],{h:620}),
+row([cell("Kepala Teknik Tambang",{b:1}),cell(D.kttNama||""),cell(""),cell("")],{h:620})]));
 C.push(H(15,"Kontribusi Penyebab Kecelakaan"));
-C.push(tbl([row(["No","Nama","Jabatan","Kontribusi","Sanksi"].map((h,k)=>cell(h,{b:1,w:[6,24,22,28,20][k]}))),...D.kontribusi.map((r,n)=>row([cell(n+1),cell(r.nama),cell(r.jabatan),cell(r.kontribusi),cell(r.sanksi)]))]));
-if(D.komentar){C.push(par([T("Komentar KTT:",{b:1})],{sp:100}));C.push(par(D.komentar))}
-C.push(par("Diketahui Oleh,",{sp:220}));C.push(par((D.kttKota||"Lahat")+", "+tglID(D.kttTgl)));C.push(par(""));C.push(par(""));
-C.push(par([T(D.kttNama||"( …………………………… )",{b:1})]));C.push(par("Kepala Teknik Tambang"));
-const doc=new Document({styles:{default:{document:{run:{font:"Arial",size:18}}}},sections:[{properties:{page:{margin:{top:720,bottom:720,left:720,right:720}}},children:C}]});
+C.push(tbl([row(["No","Nama","Jabatan","Kontribusi","Sanksi"].map((h,k)=>hd(h,{w:[6,24,22,28,20][k]}))),...(D.kontribusi.length?D.kontribusi:[{nama:"-",jabatan:"",kontribusi:"",sanksi:""}]).map((r,n)=>row([cell(n+1,{a:AlignmentType.CENTER}),cell(r.nama||"-"),cell(r.jabatan||"-"),cell(r.kontribusi||"-"),cell(r.sanksi||"-")]))]));
+if(D.komentar){C.push(par([T("Komentar KTT:",{b:1})],{sp:80}));C.push(tbl([row([cell("",{ch:String(D.komentar).split("\n").map(l=>par(l))})])]))}
+C.push(par("Diketahui Oleh,",{sp:220}));
+C.push(tbl([row([cell("",{w:55,nb:1}),cell("",{w:45,nb:1,ch:[par((D.kttKota||"Lahat")+", "+tglID(D.kttTgl),{sp:60}),par("Kepala Teknik Tambang",{sp:520}),par([T(D.kttNama?"( "+D.kttNama+" )":"( ……………………………… )",{b:1})],{sp:20})]})])]));
+const doc=new Document({styles:{default:{document:{run:{font:"Arial",size:18}}}},sections:[{properties:{page:{margin:{top:900,bottom:720,left:720,right:720}}},headers:{default:header},footers:{default:footer},children:C}]});
 const blob=await Packer.toBlob(doc);
 const nama=("Laporan Investigasi "+(i.ir||i.id)).replace(/[\\\/:*?"<>|]/g,"_")+".docx";
 const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=nama;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),3000);
