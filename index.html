@@ -157,9 +157,22 @@ details.icg[open]>summary::before{transform:rotate(90deg)}
 .rdh{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 8px}
 .rdh select{flex:1 1 260px;min-width:0;max-width:100%}
 .rdh .chks{padding:0}
+
+/* ===== Tabel insiden: no. laporan, tanggal & header tidak wrap ===== */
+#tb table th{white-space:nowrap}
+#tb table td:nth-child(1),#tb table td:nth-child(2){white-space:nowrap}
+th .sa{margin-left:4px;font-size:10px}
+
+/* ===== Panel navigasi bisa disembunyikan (desktop) ===== */
+#sbt{position:fixed;top:22px;left:250px;z-index:7;width:22px;height:46px;padding:0;border:0;border-radius:0 10px 10px 0;background:var(--nav);color:#fff;font-size:18px;line-height:1;cursor:pointer;box-shadow:2px 0 6px #0003;transition:background .15s}
+#sbt:hover{background:var(--pr);border-color:transparent}
+body.sc #side{display:none}
+body.sc #sbt{left:0}
+body.sc main{max-width:none;padding-left:36px}
+@media(max-width:860px){#sbt{display:none}}
 </style>
 </head><body>
-<div id="shell"><aside id="side"><div class="brand"><div class="logo-box"><img class="company-logo" src="https://lh3.googleusercontent.com/u/0/d/1OJofc87kqWPXwHzUr2YJqJeeSnfvmII6" alt="Logo PT Dizamatra Powerindo" referrerpolicy="no-referrer" decoding="async" onerror="logoFail(this)"><span class="logo-fb">DP</span></div><div><b>Portal Rekapitulasi Insiden & Monitoring RTP</b><small>PT. Dizamatra Powerindo – Lahat</small></div></div><nav id="nav"></nav><div id="usr"></div></aside><main id="app"></main></div><div id="st" onclick="flush()"></div><div id="lb" onclick="this.style.display='none'"><img id="lbi"></div>
+<button id="sbt" type="button" onclick="togSide()" aria-label="Sembunyikan/tampilkan panel navigasi">‹</button><div id="shell"><aside id="side"><div class="brand"><div class="logo-box"><img class="company-logo" src="https://lh3.googleusercontent.com/u/0/d/1OJofc87kqWPXwHzUr2YJqJeeSnfvmII6" alt="Logo PT Dizamatra Powerindo" referrerpolicy="no-referrer" decoding="async" onerror="logoFail(this)"><span class="logo-fb">DP</span></div><div><b>Portal Rekapitulasi Insiden & Monitoring RTP</b><small>PT. Dizamatra Powerindo – Lahat</small></div></div><nav id="nav"></nav><div id="usr"></div></aside><main id="app"></main></div><div id="st" onclick="flush()"></div><div id="lb" onclick="this.style.display='none'"><img id="lbi"></div>
 <script>
 const RC=[["Pelaksanaan Prosedur/Kebijakan","UA"],["Penggunaan Peralatan","UA"],["Metode Perlindungan (APD)","UA"],["Tidak Memperhatikan/Menyadari","UA"],["Sistem Pengaman Tidak Memadai","UC"],["Perkakas/Peralatan Tidak Aman","UC"],["Pemaparan Kondisi Kesehatan","UC"],["Lingkungan Kerja Tidak Aman","UC"],["Ketidakmampuan Fisik","HF"],["Stress Fisik","HF"],["Ketidakmampuan Mental","HF"],["Stress Mental","HF"],["Tingkat Keterampilan","HF"],["Perilaku/Kurang Motivasi","HF"],["Kurang Pelatihan","JF"],["Supervisi Tidak Memadai","JF"],["Seleksi & Pengawasan Kontraktor","JF"],["Rekayasa Desain","JF"],["Rencana Pemeliharaan","JF"],["Pembelian & Kendali Bahan","JF"],["Perkakas/Peralatan Tidak Memadai","JF"],["Peraturan/Prosedur Kerja","JF"],["Komunikasi Tidak Memadai","JF"]];
 const GRP={UA:"Tindakan Tidak Aman",UC:"Kondisi Tidak Aman",HF:"Faktor Manusia",JF:"Faktor Pekerjaan"};
@@ -305,7 +318,7 @@ function setDs(v){V.ds=v;list()}
 function list(){const d=sortInc(F().filter(i=>(!V.q||(i.title+nm(i)+i.ir).toLowerCase().includes(V.q.toLowerCase()))&&has("m",i.mon)));
 $("#app").innerHTML=`<div class="card"><div class="row"><input placeholder="Cari judul / nama (semua orang) / no. laporan" value="${esc(V.q)}" oninput="V.q=this.value;list2()" style="max-width:300px">${sel("m","Semua bulan",MON.map(m=>[m,m]))}${selY()}${selC()}${selS()}${selI()}<select onchange="setDs(this.value)" title="Urutkan berdasarkan tanggal"><option value="desc"${V.ds!="asc"?" selected":""}>Tanggal: Terbaru → Terlama</option><option value="asc"${V.ds=="asc"?" selected":""}>Tanggal: Terlama → Terbaru</option></select><span class="mu">${d.length} data</span></div>${selX()}<div class="wrap" id="tb"></div></div>`;list2()}
 function list2(){const d=sortInc(F().filter(i=>(!V.q||(i.title+nm(i)+i.ir).toLowerCase().includes(V.q.toLowerCase()))&&has("m",i.mon)));
-$("#tb").innerHTML=`<table><tr><th>No. Laporan</th><th style="cursor:pointer" onclick="setDs(V.ds=='asc'?'desc':'asc')" title="Klik untuk ganti urutan">Tanggal ${V.ds=='asc'?'▲':'▼'}</th><th>Judul</th><th>Perusahaan</th><th>Klasifikasi</th><th>RTP</th><th>Investigasi</th><th>Status</th></tr>${d.map(i=>{const r=rp(i.id),k=r.filter(x=>x.status=="Done").length;return `<tr class="cl" onclick="go('detail','${i.id}')"><td>${esc(i.ir)}</td><td>${i.date}</td><td>${esc(i.title)}${(i.others||[]).length?` <span class="tag" title="Jumlah orang terlibat">👥 ${pp(i).length}</span>`:""}</td><td>${esc(i.co)}</td><td><span class="tag">${esc(i.cls)}</span></td><td>${r.length?k+"/"+r.length:"-"}</td><td><span class="tag ${invCls(i)}">${invOf(i)}</span></td><td><span class="tag ${stOf(i)}">${stOf(i)}</span></td></tr>`}).join("")}</table>`}
+$("#tb").innerHTML=`<table><tr><th>No. Laporan</th><th style="cursor:pointer" onclick="setDs(V.ds=='asc'?'desc':'asc')" title="Klik untuk ganti urutan">Tanggal<span class="sa">${V.ds=='asc'?'▲':'▼'}</span></th><th>Judul</th><th>Perusahaan</th><th>Klasifikasi</th><th>RTP</th><th>Investigasi</th><th>Status</th></tr>${d.map(i=>{const r=rp(i.id),k=r.filter(x=>x.status=="Done").length;return `<tr class="cl" onclick="go('detail','${i.id}')"><td>${esc(i.ir)}</td><td>${i.date}</td><td>${esc(i.title)}${(i.others||[]).length?` <span class="tag" title="Jumlah orang terlibat">👥 ${pp(i).length}</span>`:""}</td><td>${esc(i.co)}</td><td><span class="tag">${esc(i.cls)}</span></td><td>${r.length?k+"/"+r.length:"-"}</td><td><span class="tag ${invCls(i)}">${invOf(i)}</span></td><td><span class="tag ${stOf(i)}">${stOf(i)}</span></td></tr>`}).join("")}</table>`}
 const FLD_=(F,v)=>F.map(f=>fld(f,v[f[0]])).join("");
 const SECS=[["Informasi Kejadian",["ir","date","time","day","shift","co","title"]],["Lokasi & Unit",["dept","loc","unit"]],["Klasifikasi & Dampak",["cls","jns","dlMan","dlUnit","cost"]],["Investigasi",["invStatus"]],["Kronologi Singkat",["chrono"]]];
 const FLD_S=v=>SECS.filter(s=>s[0]!="Investigasi"||ME.role=="admin"||(ME.role=="pic"&&PIC_BOLEH.includes("invStatus"))).map(([h,ks])=>`<h4 class="sec">${h}</h4><div class="f">${ks.map(k=>{if(k=="co"&&ME.role=="pic")return `<div><label>Project Name / Subkon</label><input name="co" value="${esc(ME.company)}" readonly></div>`;const s=fld(FLD.find(f=>f[0]==k),v[k]);return k=="title"?s.replace("<div>",'<div style="grid-column:1/-1">'):s}).join("")}</div>`).join("");
@@ -826,4 +839,9 @@ const ok=normCo(ME.company)&&(COMP.some(sameCo)||S.inc.some(i=>sameCo(i.co)));
 if(!ok)return `<div class="card" style="border-color:var(--er)"><b>⚠ Akun PIC ini belum terhubung ke perusahaan.</b><div class="mu" style="margin-top:4px">Perusahaan tercatat di akun: “${esc(ME.company||"(kosong)")}”. Minta admin HSE mengisi kolom <i>company</i> di tab Users sesuai nama perusahaan (mis. PT. ANTAREJA MAHADA MAKMUR), lalu keluar dan masuk lagi. Selama itu semua data hanya bisa dilihat dan nama/NIK disembunyikan.</div></div>`;
 if(V.p=="detail"){const i=S.inc.find(x=>x.id==V.id);if(i&&!canEdit(i))return `<div class="card" style="border-color:var(--wa)"><b>Insiden milik ${esc(i.co)}</b><div class="mu" style="margin-top:4px">Akun Anda PIC ${esc(ME.company)}, jadi insiden ini hanya bisa dilihat. Nama dan NIK karyawan disembunyikan. Edit, unggah bukti, dan pembaruan RTP hanya untuk insiden perusahaan Anda sendiri.</div></div>`}
 return""}
-</script></body></html>
+</script><script>
+function sbtUp(){const b=document.getElementById("sbt"),on=document.body.classList.contains("sc");b.textContent=on?"›":"‹";b.title=on?"Tampilkan panel navigasi":"Sembunyikan panel navigasi";b.setAttribute("aria-expanded",String(!on))}
+function togSide(){const on=document.body.classList.toggle("sc");try{localStorage.setItem("sc",on?"1":"0")}catch(e){}sbtUp();setTimeout(()=>window.dispatchEvent(new Event("resize")),50)}
+try{if(localStorage.getItem("sc")=="1")document.body.classList.add("sc")}catch(e){}sbtUp();
+</script>
+</body></html>
