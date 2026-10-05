@@ -150,6 +150,13 @@ details.icg[open]>summary::before{transform:rotate(90deg)}
 .icb .subs label{font-size:12.5px;padding:6px 10px}
 .rcb{border:1px solid var(--bd);border-radius:12px;padding:12px;margin:10px 0}
 .rcb .rch{margin-bottom:8px}
+
+/* ===== Grafik rincian ICA ===== */
+.wide{grid-column:1/-1}
+.rsec{margin:22px 0 4px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;font-weight:700}
+.rdh{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 8px}
+.rdh select{flex:1 1 260px;min-width:0;max-width:100%}
+.rdh .chks{padding:0}
 </style>
 </head><body>
 <div id="shell"><aside id="side"><div class="brand"><div class="logo-box"><img class="company-logo" src="https://lh3.googleusercontent.com/u/0/d/1OJofc87kqWPXwHzUr2YJqJeeSnfvmII6" alt="Logo PT Dizamatra Powerindo" referrerpolicy="no-referrer" decoding="async" onerror="logoFail(this)"><span class="logo-fb">DP</span></div><div><b>Portal Rekapitulasi Insiden & Monitoring RTP</b><small>PT. Dizamatra Powerindo – Lahat</small></div></div><nav id="nav"></nav><div id="usr"></div></aside><main id="app"></main></div><div id="st" onclick="flush()"></div><div id="lb" onclick="this.style.display='none'"><img id="lbi"></div>
@@ -271,7 +278,7 @@ if(md=="both"&&o.two){x.fillText(p,el.x,el.y-3);x.fillText(String(v),el.x,el.y-1
 x.restore()}};
 function chart(id,type,labels,data,opt={}){const el=document.getElementById(id);if(!el||!window.Chart)return;theme();
 const hz=!!opt.h,dn=type=="doughnut",T=opt.total||data.reduce((a,b)=>a+(+b||0),0),cat=hz?"y":"x",val=hz?"x":"y",
-disp=dn?labels:labels.map(l=>wrap(l,hz?24:12)),box=el.parentElement,cur=parseInt(box.style.height)||240;
+disp=dn?labels:labels.map(l=>wrap(l,hz?(opt.w||24):12)),box=el.parentElement,cur=parseInt(box.style.height)||240;
 if(hz){const L=disp.reduce((a,l)=>a+(Array.isArray(l)?l.length:1),0);box.style.height=Math.min(800,Math.max(cur,L*14+labels.length*8+50))+"px"}
 else if(dn)box.style.height=Math.max(cur,300)+"px";
 CH.push(new Chart(el,{type,plugins:[valLabels],data:{labels:disp,datasets:[{data,backgroundColor:type=="bar"||type=="line"?"#c2410c":["#c2410c","#0e7490","#6d28d9","#ca8a04","#16a34a","#db2777","#475569"],borderColor:dn?CV("--card")||"#fff":"#c2410c",borderWidth:dn?2:1,borderRadius:dn?0:4,maxBarThickness:38,tension:.3}]},
@@ -321,10 +328,48 @@ function up(id,k,v){const r=S.rtp.find(x=>x.id==id);r[k]=v;if(k=="status"&&v=="D
 function note(id,t){if(!t.trim())return;const r=S.rtp.find(x=>x.id==id);r.log.push(`${new Date().toLocaleDateString("id-ID")}: ${t}`);save();render()}
 function del(id){if(confirm("Hapus RTP ini?")){S.rtp=S.rtp.filter(x=>x.id!=id);save();render()}}
 function lb(s){$("#lbi").src=s;$("#lb").style.display="flex"}
-function rca(){const d=F(),c=RC.map((r,x)=>d.filter(i=>i.rc.includes(x)).length);
-$("#app").innerHTML=`<div class="row">${selY()}${selC()}${selS()}${selI()}${selP()}</div>${selX()}<div class="grid">${cardChart("Root cause – ringkasan 4 kelompok (% dari total penyebab)","r0")}${Object.keys(GRP).map(g=>cardChart(GRP[g]+" (% dari "+d.length+" insiden)","r"+g,300)).join("")}</div>`;
+/* ===== Root cause: grafik berlapis (kategori → kelompok → butir rincian ICA) ===== */
+/* Hanya MEMBACA invData.ica (tidak pernah mengubah data insiden), agar membuka grafik tidak memicu penyimpanan ke Sheet. */
+const icaSelRO=i=>{const a=i&&i.invData&&!Array.isArray(i.invData)?i.invData.ica:null;return a&&Array.isArray(a.sel)?a.sel:[]};
+const ICA_IDX=(()=>{const m={};ICAC.forEach((t,k)=>m["C."+(k+1)]={t,g:"C",l:1,o:k});ICAK.forEach((t,k)=>m["K."+(k+1)]={t,g:"K",l:1,o:k});
+ICA_G.forEach(g=>g[2].forEach((it,k)=>{const key=g[0]+"."+(k+1);m[key]={t:it[0],g:g[0],l:1,o:k};(it[1]||[]).forEach((s,n)=>{m[key+"."+(n+1)]={t:s,g:g[0],l:2,o:n}})}));return m})();
+let RDC=null;
+/* Satu kali lintas data: jumlah insiden per butir, per kelompok, dan berapa insiden yang sudah punya rincian */
+function rcCount(d){const cnt={},gc={};let nd=0;
+d.forEach(i=>{const rc=Array.isArray(i.rc)?i.rc:[],seen=new Set(),gs=new Set();
+icaSelRO(i).forEach(k=>{const m=ICA_IDX[k];if(!m||seen.has(k))return;
+if(m.g!="C"&&m.g!="K"){const x=RC2G.indexOf(m.g);if(x<0||!rc.includes(x))return} /* butir hanya dihitung bila kelompoknya masih tercentang */
+seen.add(k);gs.add(m.g)});
+if(seen.size)nd++;seen.forEach(k=>cnt[k]=(cnt[k]||0)+1);gs.forEach(g=>gc[g]=(gc[g]||0)+1)});
+return{cnt,gc,nd,n:d.length}}
+const rcSort=(a,b)=>b[1]-a[1]||a[2]-b[2];
+function rcRows(group,sub){const g=ICA_G.find(x=>x[0]==group);if(!g||!RDC)return[];const C=RDC.cnt,out=[];
+g[2].map((it,k)=>[it,C[group+"."+(k+1)]||0,k]).filter(p=>p[1]).sort(rcSort).forEach(([it,c,k])=>{out.push([it[0],c]);
+if(sub)(it[1]||[]).map((s,n)=>[s,C[group+"."+(k+1)+"."+(n+1)]||0,n]).filter(z=>z[1]).sort(rcSort).forEach(z=>out.push(["↳ "+z[0],z[1]]))});
+return out}
+const rcTop=n=>Object.keys(RDC.cnt).filter(k=>{const m=ICA_IDX[k];return m.l==1&&m.g!="C"&&m.g!="K"}).map(k=>[ICA_IDX[k].t+" ("+k+")",RDC.cnt[k],ICA_IDX[k].o]).sort(rcSort).slice(0,n).map(r=>[r[0],r[1]]);
+const rcFlat=p=>Object.keys(RDC.cnt).filter(k=>ICA_IDX[k].g==p).map(k=>[ICA_IDX[k].t,RDC.cnt[k],ICA_IDX[k].o]).sort(rcSort).map(r=>[r[0],r[1]]);
+function rcDraw(id,rows){const el=document.getElementById(id);if(!el)return;
+if(!rows.length){const b=el.parentElement;b.style.height="auto";b.innerHTML='<p class="mu" style="margin:8px 0">Belum ada butir rincian yang dipilih pada filter ini.</p>';return}
+chart(id,"bar",rows.map(r=>r[0]),rows.map(r=>r[1]),{h:1,total:RDC.n,unit:"insiden",w:innerWidth<600?22:34})}
+/* Ganti kelompok / sub-butir: hanya grafik ini yang digambar ulang, halaman tidak dirender ulang */
+function rcDrill(){const box=document.getElementById("rdBox"),s=document.getElementById("rdSel");if(!box||!s||!RDC)return;
+CH=CH.filter(c=>{if(c.canvas&&c.canvas.id=="rd"){c.destroy();return false}return true});
+V.rg=s.value;box.style.height="240px";box.innerHTML='<canvas id="rd"></canvas>';
+const n=document.getElementById("rdN");if(n)n.textContent=(RDC.gc[V.rg]||0)+" dari "+RDC.n+" insiden memilih rincian di kelompok ini";
+rcDraw("rd",rcRows(V.rg,!!V.rsub))}
+function rca(){const d=F(),c=RC.map((r,x)=>d.filter(i=>i.rc.includes(x)).length);RDC=rcCount(d);
+if(!ICA_G.some(g=>g[0]==V.rg))V.rg=ICA_G.map(g=>g[0]).sort((a,b)=>(RDC.gc[b]||0)-(RDC.gc[a]||0))[0]||"PL1";
+const opts=Object.keys(GRP).map(cg=>`<optgroup label="${GRP[cg]}">${ICA_G.filter(g=>RC[RC2G.indexOf(g[0])][1]==cg).map(g=>`<option value="${g[0]}" ${g[0]==V.rg?"selected":""}>${g[0]} · ${esc(g[1])}${RDC.gc[g[0]]?" — "+RDC.gc[g[0]]+" insiden":""}</option>`).join("")}</optgroup>`).join(""),
+cv=(id,t)=>`<div class="card"><h3>${t}</h3><div class="cv" style="height:240px"><canvas id="${id}"></canvas></div></div>`;
+$("#app").innerHTML=`<div class="row">${selY()}${selC()}${selS()}${selI()}${selP()}</div>${selX()}<div class="grid">${cardChart("Root cause – ringkasan 4 kelompok (% dari total penyebab)","r0")}${Object.keys(GRP).map(g=>cardChart(GRP[g]+" (% dari "+d.length+" insiden)","r"+g,300)).join("")}</div>
+<h3 class="rsec">Rincian butir ICA</h3><p class="mu" style="margin:0 0 10px">Rincian terisi pada <b>${RDC.nd}</b> dari ${d.length} insiden. Insiden lama baru tampil di sini setelah butir rinciannya dicentang di form Laporan Investigasi (bagian 12).</p>
+<div class="grid"><div class="card wide"><h3>Rincian butir per kelompok penyebab (% dari ${d.length} insiden)</h3><div class="rdh"><select id="rdSel" onchange="rcDrill()" aria-label="Pilih kelompok penyebab">${opts}</select><div class="chks"><label class="ck"><input type="checkbox" ${V.rsub?"checked":""} onchange="V.rsub=this.checked;rcDrill()"><span>Sertakan sub-butir</span></label></div></div><div class="mu" id="rdN" style="margin:0 0 6px"></div><div class="cv" id="rdBox" style="height:240px"><canvas id="rd"></canvas></div></div>
+<div class="card wide"><h3>10 butir rincian teratas (% dari ${d.length} insiden)</h3><div class="cv" style="height:240px"><canvas id="rt"></canvas></div></div>
+${cv("rcc","Jenis cidera (% dari "+d.length+" insiden)")}${cv("rck","Jenis kontak (% dari "+d.length+" insiden)")}</div>`;
 chart("r0","bar",Object.values(GRP),Object.keys(GRP).map(g=>RC.reduce((a,r,x)=>a+(r[1]==g?c[x]:0),0)));
-Object.keys(GRP).forEach(g=>{const e=RC.map((r,x)=>[r[0],c[x]]).filter((_,x)=>RC[x][1]==g).sort((a,b)=>b[1]-a[1]);chart("r"+g,"bar",e.map(x=>x[0]),e.map(x=>x[1]),{h:1,total:d.length,unit:"insiden"})})}
+Object.keys(GRP).forEach(g=>{const e=RC.map((r,x)=>[r[0],c[x]]).filter((_,x)=>RC[x][1]==g).sort((a,b)=>b[1]-a[1]);chart("r"+g,"bar",e.map(x=>x[0]),e.map(x=>x[1]),{h:1,total:d.length,unit:"insiden"})});
+rcDrill();rcDraw("rt",rcTop(10));rcDraw("rcc",rcFlat("C"));rcDraw("rck",rcFlat("K"))}
 /* ===== RTP & Bukti: ringkasan, filter ganda, tampilan tabel/kartu, unduh CSV ===== */
 const RS=[["Open","Open"],["Progress","Dalam proses"],["Done","Selesai"]],JD=["Terlambat","Jatuh tempo ≤7 hari","Belum jatuh tempo","Tanpa target","Selesai"],EVO=["Sudah ada bukti","Belum ada bukti"];
 const dl=r=>r.due?Math.round((Date.parse(r.due)-Date.parse(today()))/864e5):null;
@@ -679,7 +724,7 @@ function nav(){const a=ME&&(ME.role=="admin"||ME.role=="pic"),t=[["dash","Dashbo
 $("#nav").innerHTML=t.map(([k,l,s])=>`<button class="${V.p==k||(k=="list"&&V.p=="detail")?"on":""}" onclick="go('${k}')">${sv(ICO[k])}<span class="l">${l}</span><span class="s">${s}</span></button>`).join("");
 const pub=!ME||ME.role=="public";
 $("#usr").innerHTML=pub?`<div class="who"><b>Mode Publik</b><span class="mu">Hanya lihat & unduh</span></div><button class="pri ub" onclick="go('login')" aria-label="Masuk petugas"><span class="ubt">Masuk petugas</span>${sv('<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>')}</button>`:`<div class="who"><b>${esc(ME.nama)}</b><span class="tag">${esc(ME.role)}</span>${ME.role=="pic"?`<span class="mu">${esc(ME.company||"⚠ perusahaan belum diatur")}</span>`:""}</div><span class="av">${esc(String(ME.nama||"?").trim().charAt(0).toUpperCase())}</span><button class="ub" onclick="logout()" aria-label="Keluar"><span class="ubt">Keluar</span>${sv('<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>')}</button>`}
-const PT={dash:["Dashboard","Ringkasan insiden, tren, dan penyebab"],list:["Data Insiden","Cari dan buka rincian setiap insiden"],detail:["Detail Insiden","Resume, investigasi, root cause, dan tindak lanjut"],rca:["Analisis Root Cause","Sebaran penyebab dasar insiden"],rtp:["RTP & Bukti Perbaikan","Pantau progres perbaikan beserta buktinya"],lap:["Laporan Investigasi","Lengkapi hasil investigasi, lalu unduh sebagai dokumen Word sesuai format perusahaan"]};
+const PT={dash:["Dashboard","Ringkasan insiden, tren, dan penyebab"],list:["Data Insiden","Cari dan buka rincian setiap insiden"],detail:["Detail Insiden","Resume, investigasi, root cause, dan tindak lanjut"],rca:["Analisis Root Cause","Sebaran penyebab per kategori, kelompok, dan butir rincian ICA"],rtp:["RTP & Bukti Perbaikan","Pantau progres perbaikan beserta buktinya"],lap:["Laporan Investigasi","Lengkapi hasil investigasi, lalu unduh sebagai dokumen Word sesuai format perusahaan"]};
 function render(){CH.forEach(c=>c.destroy());CH=[];theme();nav();({dash,list,form,detail,rca,rtp:rtpAll,login:loginView,lap})[V.p]();
 const t=V.p=="form"?[V.ed?"Edit Resume Insiden":"Input Resume Insiden","Lengkapi data kejadian, kronologi, dan orang yang terlibat"]:PT[V.p];
 if(t)$("#app").insertAdjacentHTML("afterbegin",`<div class="ph"><h2>${t[0]}</h2><p>${t[1]}</p></div>`);
