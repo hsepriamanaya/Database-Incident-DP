@@ -585,7 +585,8 @@ const row=(c,o={})=>new TableRow(Object.assign({children:c},o&&o.ns?{cantSplit:t
 const tbl=(rows,cw)=>new Table(cw?{width:{size:10466,type:WidthType.DXA},columnWidths:cw.map(p=>Math.round(p*104.66)),layout:TableLayoutType.FIXED,rows}:{width:{size:100,type:WidthType.PERCENTAGE},rows});
 const gap=()=>par("",{sp:40});
 const chk=(on,l)=>T((on?"☒ ":"☐ ")+l+"   ");
-const H=(n,t)=>new Paragraph({keepNext:true,spacing:{before:260,after:100},border:{bottom:{style:BorderStyle.SINGLE,size:8,color:"404040",space:3}},children:[T(n+". "+t,{b:true,s:22})]});
+let SEC=0;const LTR=n=>{let r="";while(n>0){const m=(n-1)%26;r=String.fromCharCode(65+m)+r;n=Math.floor((n-1)/26)}return r};
+const H=(n,t)=>new Paragraph({keepNext:true,spacing:{before:260,after:100},border:{bottom:{style:BorderStyle.SINGLE,size:8,color:"404040",space:3}},children:[T(LTR(++SEC)+".  "+t,{b:true,s:22})]});
 const hd=(t,o={})=>cell(t,Object.assign({b:1,sh:"D9D9D9",a:AlignmentType.CENTER},o));
 const lbl=(t,o={})=>cell(t,Object.assign({b:1,sh:"F2F2F2"},o));
 const numList=arr=>arr.map((t,n)=>new Paragraph({indent:{left:420,hanging:420},spacing:{after:40},children:[T(n+1+"."),TABR(),T(t)]}));
