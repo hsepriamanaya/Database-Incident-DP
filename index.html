@@ -170,6 +170,13 @@ body.sc #side{display:none}
 body.sc #sbt{left:0}
 body.sc main{max-width:none;padding-left:36px}
 @media(max-width:860px){#sbt{display:none}}
+
+/* ===== Tabel laporan: lebar kolom menyesuaikan isi, textarea otomatis tinggi ===== */
+table.lt{table-layout:fixed;width:100%}
+table.lt th,table.lt td{padding:6px 8px;vertical-align:top}
+table.lt th{white-space:normal}
+textarea.ag{resize:vertical;overflow:hidden;line-height:1.55;min-height:44px;display:block}
+.imgw textarea.cap{width:200px;min-height:0;font-size:12px;padding:6px 8px;resize:none}
 </style>
 </head><body>
 <button id="sbt" type="button" onclick="togSide()" aria-label="Sembunyikan/tampilkan panel navigasi">‹</button><div id="shell"><aside id="side"><div class="brand"><div class="logo-box"><img class="company-logo" src="https://lh3.googleusercontent.com/u/0/d/1OJofc87kqWPXwHzUr2YJqJeeSnfvmII6" alt="Logo PT Dizamatra Powerindo" referrerpolicy="no-referrer" decoding="async" onerror="logoFail(this)"><span class="logo-fb">DP</span></div><div><b>Portal Rekapitulasi Insiden & Monitoring RTP</b><small>PT. Dizamatra Powerindo – Lahat</small></div></div><nav id="nav"></nav><div id="usr"></div></aside><main id="app"></main></div><div id="st" onclick="flush()"></div><div id="lb" onclick="this.style.display='none'"><img id="lbi"></div>
@@ -564,11 +571,13 @@ let LD=null,LIMG={sketsa:[],foto:[]};
 function lapSet(el){const p=el.dataset.p.split(".");let o=LD;for(let k=0;k<p.length-1;k++)o=o[p[k]];o[p[p.length-1]]=el.value}
 const lapIn=(p,v,ph)=>`<input data-p="${p}" value="${esc(v)}" placeholder="${esc(ph||"")}" onchange="lapSet(this)">`;
 const lapTa=(p,v,r,ph)=>`<textarea data-p="${p}" rows="${r||3}" placeholder="${esc(ph||"")}" onchange="lapSet(this)">${esc(v)}</textarea>`;
+const lapAg=(p,v,r,ph)=>`<textarea class="ag" data-p="${p}" rows="${r||3}" placeholder="${esc(ph||"")}" oninput="agFit(this)" onchange="lapSet(this)">${esc(v)}</textarea>`;
 const lapSel=(p,v,o)=>`<select data-p="${p}" onchange="lapSet(this)">${o.map(x=>`<option ${v==x?"selected":""}>${x}</option>`).join("")}</select>`;
-function lapTbl(jud,heads,key,cols,defRow){return `<h4 class="sec">${jud}</h4><div class="wrap"><table><tr>${heads.map(h=>`<th>${h}</th>`).join("")}<th style="width:40px"></th></tr>${(LD[key]||[]).map((r,x)=>`<tr>${cols.map(c=>`<td>${c[2]?lapSel(key+"."+x+"."+c[0],r[c[0]]||c[2][0],c[2]):lapIn(key+"."+x+"."+c[0],r[c[0]],c[1])}</td>`).join("")}<td><button type="button" onclick="LD.${key}.splice(${x},1);render()">✕</button></td></tr>`).join("")}</table></div><div class="row" style="margin:6px 0 0"><button type="button" onclick='LD.${key}.push(${JSON.stringify(defRow)});render()'>+ Tambah baris</button></div>`}
+function lapAddRow(key,def,inh){const L=LD[key]||(LD[key]=[]),r=Object.assign({},def);if(inh&&L.length){const l=L[L.length-1];r[inh]=l[inh]||def[inh]||r[inh]}L.push(r);render()}
+function lapTbl(jud,heads,key,cols,defRow,opt){opt=opt||{};const ta=opt.ta||[],w=opt.w||[];return `<h4 class="sec">${jud}</h4><div class="wrap"><table${opt.fit?` class="lt" style="min-width:${opt.mw||640}px"`:""}>${opt.fit?`<colgroup>${heads.map((h,k)=>`<col${w[k]?` style="width:${w[k]}px"`:""}>`).join("")}<col style="width:46px"></colgroup>`:""}<tr>${heads.map(h=>`<th>${h}</th>`).join("")}<th style="width:40px"></th></tr>${(LD[key]||[]).map((r,x)=>`<tr>${cols.map((c,k)=>`<td>${c[2]?lapSel(key+"."+x+"."+c[0],r[c[0]]||c[2][0],c[2]):ta.includes(k)?lapAg(key+"."+x+"."+c[0],r[c[0]],opt.rows||3,c[1]):lapIn(key+"."+x+"."+c[0],r[c[0]],c[1])}</td>`).join("")}<td><button type="button" onclick="LD.${key}.splice(${x},1);render()">✕</button></td></tr>`).join("")}</table></div><div class="row" style="margin:6px 0 0"><button type="button" onclick='lapAddRow("${key}",${JSON.stringify(defRow)}${opt.inh?`,"${opt.inh}"`:""})'>+ Tambah baris</button></div>`}
 async function lapImg(fs,key){for(const f of fs){if(!f.type.startsWith("image"))continue;const url=URL.createObjectURL(f);
-try{const im=await new Promise((ok,no)=>{const m=new Image();m.onload=()=>ok(m);m.onerror=no;m.src=url});LIMG[key].push({buf:await f.arrayBuffer(),w:im.naturalWidth||600,h:im.naturalHeight||400,n:f.name})}catch(e){alert(f.name+": gambar tidak bisa dibaca")}URL.revokeObjectURL(url)}render()}
-const lapImgBox=(jud,key)=>`<h4 class="sec">${jud}</h4><div class="row"><label class="btn" style="margin:0;color:var(--tx)">📎 Tambah gambar<input type="file" multiple accept="image/*" hidden onchange="lapImg(this.files,'${key}')"></label><span class="mu">Gambar hanya ikut ke dokumen Word yang diunduh (tidak tersimpan di draf).</span></div><div class="ev">${LIMG[key].map((g,x)=>`<span class="imgw"><img src="${URL.createObjectURL(new Blob([g.buf]))}" title="${esc(g.n)}"><button type="button" onclick="LIMG.${key}.splice(${x},1);render()">✕ Hapus</button></span>`).join("")||'<span class="mu">Belum ada gambar.</span>'}</div>`;
+try{const im=await new Promise((ok,no)=>{const m=new Image();m.onload=()=>ok(m);m.onerror=no;m.src=url});LIMG[key].push({buf:await f.arrayBuffer(),w:im.naturalWidth||600,h:im.naturalHeight||400,n:f.name,c:""})}catch(e){alert(f.name+": gambar tidak bisa dibaca")}URL.revokeObjectURL(url)}render()}
+const lapImgBox=(jud,key)=>`<h4 class="sec">${jud}</h4><div class="row"><label class="btn" style="margin:0;color:var(--tx)">📎 Tambah gambar<input type="file" multiple accept="image/*" hidden onchange="lapImg(this.files,'${key}')"></label><span class="mu">Gambar dan caption hanya ikut ke dokumen Word yang diunduh (tidak tersimpan di draf).</span></div><div class="ev">${LIMG[key].map((g,x)=>`<span class="imgw"><img src="${URL.createObjectURL(new Blob([g.buf]))}" title="${esc(g.n)}"><textarea class="ag cap" rows="2" placeholder="Caption / keterangan gambar…" oninput="agFit(this);LIMG.${key}[${x}].c=this.value">${esc(g.c||"")}</textarea><button type="button" onclick="LIMG.${key}.splice(${x},1);render()">✕ Hapus</button></span>`).join("")||'<span class="mu">Belum ada gambar.</span>'}</div>`;
 function lap(){const i=S.inc.find(x=>x.id==V.id);if(!i||ME.role!="admin")return go("detail",V.id);
 if(!LD||LD._id!=i.id){LD=Object.assign(lapDef(i),i.invData||{});LD._id=i.id;LIMG={sketsa:[],foto:[]}}
 const P0=pp(i)[0]||{},R=rp(i.id);
@@ -580,7 +589,7 @@ $("#app").innerHTML=`<button class="ghost" onclick="go('detail','${i.id}')">← 
 <div><label>Kejadian berbahaya?</label>${lapSel("berbahaya",LD.berbahaya,["Tidak","Ya"])}</div><div><label>Kecelakaan tambang?</label>${lapSel("kecTambang",LD.kecTambang,["Tidak","Ya"])}</div><div><label>Sebutkan bila "Kejadian Lain"</label>${lapIn("jenisLain",LD.jenisLain)}</div></div></div>
 <div class="card">${lapTbl("5. Rincian kerusakan peralatan",["Nama komponen alat/fasilitas","Hari hilang","Perkiraan biaya"],"rusakAlat",[["nama"],["hari"],["biaya"]],{nama:"",hari:"",biaya:""})}
 <h4 class="sec">Rincian kerusakan lingkungan</h4>${lapTa("rusakLingk",LD.rusakLingk,2)}</div>
-<div class="card">${lapTbl("6. Kronologi kejadian",["Fase","Tanggal","Waktu","Uraian kronologi"],"kronologi",[["fase","",FASE],["tgl","cth. 2026-03-13"],["waktu","cth. 19.00"],["uraian"]],{tgl:"",waktu:"",uraian:"",fase:"Sebelum Kejadian"})}</div>
+<div class="card">${lapTbl("6. Kronologi kejadian",["Fase","Tanggal","Waktu","Uraian kronologi"],"kronologi",[["fase","",FASE],["tgl","cth. 2026-03-13"],["waktu","cth. 19.00"],["uraian","Tulis uraian kronologi selengkapnya…"]],{tgl:"",waktu:"",uraian:"",fase:"Sebelum Kejadian"},{fit:1,w:[175,135,95],ta:[3],rows:3,inh:"fase",mw:760})}</div>
 <div class="card">${lapImgBox("7. Sketsa kejadian","sketsa")}</div>
 <div class="card"><h4 class="sec">Hasil wawancara</h4>${lapTa("wawancara",LD.wawancara,10,"Tulis rangkuman wawancara (tanya-jawab per narasumber)…")}</div>
 <div class="card">${lapImgBox("8. Foto kejadian & lampiran","foto")}</div>
@@ -591,7 +600,7 @@ ${lapTbl("Saksi-saksi",["Nama","ID No.","Jabatan","Departemen","DOB","DOH"],"sak
 <div><label>PART (peran alat/part yang berkontribusi)</label>${lapTa("p4.part",LD.p4.part,4)}</div>
 <div><label>POSITION &amp; LINGKUNGAN</label>${lapTa("p4.position",LD.p4.position,4)}</div>
 <div><label>PAPER (data pendukung/sistem)</label>${lapTa("p4.paper",LD.p4.paper,4)}</div></div></div>
-<div class="card"><h4 class="sec">11. Analisa penyebab (5-Why)</h4><div class="wrap"><table><tr>${[1,2,3,4,5].map(n=>`<th>Penyebab ${n}${n>1?" (sebab dari sebab "+(n-1)+")":""}</th>`).join("")}<th style="width:40px"></th></tr>${LD.why.map((r,x)=>`<tr>${r.map((v,c)=>`<td>${lapIn("why."+x+"."+c,v)}</td>`).join("")}<td><button type="button" onclick="LD.why.splice(${x},1);render()">✕</button></td></tr>`).join("")}</table></div><div class="row" style="margin:6px 0 0"><button type="button" onclick='LD.why.push(["","","","",""]);render()'>+ Tambah baris</button></div>
+<div class="card"><h4 class="sec">11. Analisa penyebab (5-Why)</h4><div class="wrap"><table class="lt" style="min-width:860px"><colgroup><col><col><col><col><col><col style="width:46px"></colgroup><tr>${[1,2,3,4,5].map(n=>`<th>Penyebab ${n}${n>1?" (sebab dari sebab "+(n-1)+")":""}</th>`).join("")}<th style="width:40px"></th></tr>${LD.why.map((r,x)=>`<tr>${r.map((v,c)=>`<td>${lapAg("why."+x+"."+c,v,3)}</td>`).join("")}<td><button type="button" onclick="LD.why.splice(${x},1);render()">✕</button></td></tr>`).join("")}</table></div><div class="row" style="margin:6px 0 0"><button type="button" onclick='LD.why.push(["","","","",""]);render()'>+ Tambah baris</button></div>
 </div>
 <div class="card"><h4 class="sec">12. Panduan analisa kecelakaan ICA — Root cause</h4><p class="mu">Susunannya sama dengan tabel di dokumen Word (1.1 Jenis cidera, 1.2 Jenis kontak, 1.3 Penyebab langsung, 1.4 Penyebab dasar). Buka kelompok, lalu centang butir rincian yang sesuai — kelompoknya otomatis ikut tercentang dan datanya sama dengan halaman detail & dashboard Root Cause. Setiap penyebab yang dipilih langsung muncul di bagian 13 untuk diisi RTP-nya. Terpilih: <b id="rcN">${i.rc.length}</b> kelompok, <b id="icaN">${ICA(i).sel.filter(k=>{const p=k.split(".");return p.length==2&&p[0]!="C"&&p[0]!="K"}).length}</b> butir rincian. <button type="button" onclick="document.getElementById('rtpCard').scrollIntoView({behavior:'smooth'})">Isi RTP ↓</button></p><div id="icaBox">${icaHtml(i)}</div></div>
 <div class="card" id="rtpCard"><h4 class="sec">13. Rekomendasi tindakan perbaikan (RTP)</h4><p class="mu">Setiap penyebab yang dicentang di bagian 12 otomatis muncul di bawah ini. Isi tindakan, PIC, dan batas waktu: tersimpan sebagai RTP (sama dengan menu RTP & Bukti) dan masuk ke tabel 13 di dokumen Word pada baris penyebabnya. Status, progres, dan bukti tetap dikelola di halaman detail atau menu RTP & Bukti.</p><div id="rtpBox">${rtpHtml(i)}</div></div>
@@ -642,7 +651,7 @@ const bpOther=injAll.filter(x=>!bpKnown.includes(nrm(x))&&nrm(x)!="LAIN LAIN"),b
 const icaCls=[[/fatality/i,"FA (Fatal Accident)"],[/lost time/i,"LTI (Lost Time Injury)"],[/treatment/i,"MTI (Medical Treatment Injury)"],[/first aid/i,"FAI (First Aid Injury)"]];
 const imgType=buf=>{const b=new Uint8Array(buf.slice(0,4));return b[0]==0x89&&b[1]==0x50?"png":b[0]==0xff&&b[1]==0xd8?"jpg":b[0]==0x47&&b[1]==0x49?"gif":"png"};
 const imgPar=o=>{const w=Math.min(430,o.w||430);return new Paragraph({alignment:AlignmentType.CENTER,children:[new ImageRun({type:imgType(o.buf),data:o.buf,transformation:{width:w,height:Math.round(w*(o.h||300)/(o.w||430))}})]})};
-const imgGrid=(arr,cap)=>{const NR=[];for(let k=0;k<arr.length;k+=2)NR.push(row(arr.slice(k,k+2).map((o,x)=>new TableCell({borders:NBR,width:{size:50,type:WidthType.PERCENTAGE},margins:MRG,children:[imgPar(o),par(cap+" "+(k+x+1),{a:AlignmentType.CENTER})]}))));return tbl(NR)};
+const imgGrid=(arr,cap)=>{const NR=[];for(let k=0;k<arr.length;k+=2)NR.push(row(arr.slice(k,k+2).map((o,x)=>new TableCell({borders:NBR,width:{size:50,type:WidthType.PERCENTAGE},margins:MRG,children:[imgPar(o),par([T(cap+" "+(k+x+1),{b:1}),T(String(o.c||"").trim()?". "+String(o.c).trim().replace(/\s*\n\s*/g," "):"")],{a:AlignmentType.CENTER})]}))));return tbl(NR)};
 const krit=(on,title,items)=>tbl([row([cell("",{w:16,ch:[par([T("Ya",{b:1})],{a:AlignmentType.CENTER,sp:20}),new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:220},children:[cbT(on=="Ya",30)]}),par([T("Tidak",{b:1})],{a:AlignmentType.CENTER,sp:20}),new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:40},children:[cbT(on!="Ya",30)]})]}),cell("",{w:84,va:VerticalAlign.TOP,ch:[par([T(title,{b:1})],{sp:60}),...numList(items)]})])],[16,84]);
 const rcSel=RC.map((r,x)=>i.rc.includes(x)?r[0]:null).filter(Boolean),R=rp(i.id);
 const bd4=(a,b,c,d)=>row([lbl(a,{w:24}),cell(b,{w:26}),lbl(c,{w:24}),cell(d,{w:26})]);
@@ -843,5 +852,11 @@ return""}
 function sbtUp(){const b=document.getElementById("sbt"),on=document.body.classList.contains("sc");b.textContent=on?"›":"‹";b.title=on?"Tampilkan panel navigasi":"Sembunyikan panel navigasi";b.setAttribute("aria-expanded",String(!on))}
 function togSide(){const on=document.body.classList.toggle("sc");try{localStorage.setItem("sc",on?"1":"0")}catch(e){}sbtUp();setTimeout(()=>window.dispatchEvent(new Event("resize")),50)}
 try{if(localStorage.getItem("sc")=="1")document.body.classList.add("sc")}catch(e){}sbtUp();
+</script>
+<script>
+function agFit(t){if(!t||!t.offsetParent)return;t.style.height="auto";const h=t.scrollHeight+(t.offsetHeight-t.clientHeight);if(h>0)t.style.height=h+"px"}
+const agAll=()=>document.querySelectorAll("textarea.ag").forEach(agFit);
+try{new MutationObserver(agAll).observe(document.getElementById("app"),{childList:true,subtree:true})}catch(e){}
+window.addEventListener("resize",agAll);
 </script>
 </body></html>
