@@ -320,7 +320,7 @@ $("#app").innerHTML=`<div class="row">${selY()}${selM()}${selC()}${selS()}${selI
 const g=(f,id,t="bar",o)=>{const e=cnt(d,f);chart(id,t,e.map(x=>x[0]),e.map(x=>x[1]),o)};
 {const ys=[...new Set(d.map(yr))].sort(),pal=["#c2410c","#0e7490","#6d28d9","#ca8a04","#16a34a"];
 chart("c0","bar",ys,ys.map(y=>d.filter(i=>yr(i)==y).length));
-CH.push(new Chart(document.getElementById("c1"),{type:"line",data:{labels:MON.map(m=>m.slice(0,3)),datasets:ys.map((y,k)=>({label:y,data:MON.map((m,x)=>d.filter(i=>yr(i)==y&&+i.date.slice(5,7)-1==x).length),borderColor:pal[k%5],backgroundColor:pal[k%5],tension:.3}))},options:{maintainAspectRatio:false,scales:{y:{beginAtZero:true,ticks:{precision:0}}}}}))}
+CH.push(new Chart(document.getElementById("c1"),{type:"line",data:{labels:MON.map(m=>m.slice(0,3)),datasets:ys.map((y,k)=>({label:y,data:MON.map((m,x)=>d.filter(i=>yr(i)==y&&+i.date.slice(5,7)-1==x).length),borderColor:pal[k%5],backgroundColor:pal[k%5],tension:.3}))},options:{maintainAspectRatio:false,scales:{x:{ticks:{autoSkip:false,maxRotation:60,minRotation:0,font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0}}}}}))}
 g(i=>i.co,"c2","bar",{h:1});g(i=>i.cls,"c3","doughnut");g(i=>i.jns,"c4","bar",{h:1});
 chart("c5","bar",HRS.map(h=>h.slice(0,5)),HRS.map(h=>d.filter(i=>hrB(i.time)==h).length));
 g(i=>i.shift?(i.shift==1?"Day":"Night"):"","c6","doughnut");g(i=>i.dept,"c7","bar",{h:1});g(i=>i.loc,"c8","bar",{h:1});g(i=>i.unit,"c9","bar",{h:1});extra(d)}
