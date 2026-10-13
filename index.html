@@ -564,9 +564,9 @@ function delInv(id,k){if(!confirm("Hapus laporan ini dari daftar? (file tetap te
 /* ===== Laporan Investigasi (khusus admin): form lengkap -> unduh Word sesuai format perusahaan ===== */
 const persTbl=i=>{const P=pp(i);return `<h4 class="sec" style="margin-top:14px">Karyawan yang terlibat (${P.length})</h4><div class="wrap"><table><tr><th>No</th><th>Nama</th><th>ID No (NIK)</th><th>Jabatan</th><th>Umur</th><th>Masa kerja</th></tr>${P.map((p,k)=>`<tr><td>${k+1}</td><td>${esc(p.name)||"-"}</td><td>${esc(p.nik)||"-"}</td><td>${esc(p.pos)||"-"}</td><td>${esc(p.age)||"-"}</td><td>${esc(p.hired)||"-"}</td></tr>`).join("")}</table></div>`};
 const HARI=["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
-const FASE=["Sebelum Kejadian","Saat Kejadian","Setelah Kejadian"];
+const FASE=["Sebelum Kejadian","Saat Kejadian","Setelah Kejadian"],UKET=["Digunakan pihak terlibat","Terdampak (bukan unit pihak terlibat)"];
 const tglID=d=>{if(!d)return"";const t=new Date(d+"T00:00:00");if(isNaN(t))return String(d);return HARI[t.getDay()]+", "+t.getDate()+" "+MON[t.getMonth()]+" "+t.getFullYear()};
-function lapDef(i){return{_id:i.id,tglLaporan:today(),atasan:"",rs:"",dokter:"",berbahaya:"Tidak",kecTambang:"Tidak",jenisLain:"",
+function lapDef(i){return{_id:i.id,tglLaporan:today(),atasan:"",atasanList:pp(i).map(p=>({nama:"",untuk:p.name||"Semua pihak"})),unitList:[{unit:i.unit||"",ket:UKET[0],pengguna:""}],rs:"",dokter:"",berbahaya:"Tidak",kecTambang:"Tidak",jenisLain:"",
 rusakAlat:[{nama:i.unit||"",hari:i.dlUnit||"",biaya:i.cost?"Rp "+idr(+i.cost):""}],rusakLingk:"Tidak Ada",
 kronologi:[{tgl:i.date||"",waktu:(i.time||"").slice(0,5),uraian:i.chrono||"",fase:"Saat Kejadian"}],wawancara:"",
 tim:[{peran:"Ketua",nama:"",idno:"",jabatan:"",dept:"",dob:"",doh:""},{peran:"Sekretaris",nama:"",idno:"",jabatan:"",dept:"",dob:"",doh:""},{peran:"Anggota",nama:"",idno:"",jabatan:"",dept:"",dob:"",doh:""}],
@@ -590,14 +590,14 @@ async function lapImg(fs,key){for(const f of fs){if(!f.type.startsWith("image"))
 try{const im=await new Promise((ok,no)=>{const m=new Image();m.onload=()=>ok(m);m.onerror=no;m.src=url});LIMG[key].push({buf:await f.arrayBuffer(),w:im.naturalWidth||600,h:im.naturalHeight||400,n:f.name,c:""})}catch(e){alert(f.name+": gambar tidak bisa dibaca")}URL.revokeObjectURL(url)}render()}
 const lapImgBox=(jud,key)=>`<h4 class="sec">${jud}</h4><div class="row"><label class="btn" style="margin:0;color:var(--tx)">📎 Tambah gambar / seret ke sini<input type="file" multiple accept="image/*" hidden onchange="lapImg(this.files,'${key}')"></label><span class="mu">Gambar dan caption hanya ikut ke dokumen Word yang diunduh (tidak tersimpan di draf).</span></div><div class="ev">${LIMG[key].map((g,x)=>`<span class="imgw"><img src="${URL.createObjectURL(new Blob([g.buf]))}" title="${esc(g.n)}"><textarea class="ag cap" rows="2" placeholder="Caption / keterangan gambar…" oninput="agFit(this);LIMG.${key}[${x}].c=this.value">${esc(g.c||"")}</textarea><button type="button" onclick="LIMG.${key}.splice(${x},1);render()">✕ Hapus</button></span>`).join("")||'<span class="mu">Belum ada gambar.</span>'}</div>`;
 function lap(){const i=S.inc.find(x=>x.id==V.id);if(!i||!can("lapDraft",i.co))return go("detail",V.id);
-if(!LD||LD._id!=i.id){LD=Object.assign(lapDef(i),i.invData||{});LD._id=i.id;LIMG={sketsa:[],foto:[]}}
-const P0=pp(i)[0]||{},R=rp(i.id),sdp=[...new Set(["Umum",...pp(i).map(p=>p.name).filter(Boolean),...(LD.kronologi||[]).map(r=>r.sudut).filter(Boolean)])];
+if(!LD||LD._id!=i.id){LD=Object.assign(lapDef(i),i.invData||{});if(!(i.invData&&Array.isArray(i.invData.atasanList))&&LD.atasan){if(LD.atasanList.length)LD.atasanList[0].nama=LD.atasan;else LD.atasanList.push({nama:LD.atasan,untuk:"Semua pihak"})}LD._id=i.id;LIMG={sketsa:[],foto:[]}}
+const P0=pp(i)[0]||{},R=rp(i.id),pn=["Semua pihak",...new Set([...pp(i).map(p=>p.name).filter(Boolean),...(LD.atasanList||[]).map(r=>r.untuk).filter(v=>v&&v!="Semua pihak")])],sdp=[...new Set(["Umum",...pp(i).map(p=>p.name).filter(Boolean),...(LD.kronologi||[]).map(r=>r.sudut).filter(Boolean)])];
 $("#app").innerHTML=`<button class="ghost" onclick="go('detail','${i.id}')">← Kembali ke Detail Insiden</button>
 <div class="card"><h3>Laporan Hasil Investigasi — ${esc(i.ir)}</h3><p class="mu">Biodata, jenis kejadian, dan rincian cedera terisi otomatis. Root Cause dan RTP bisa langsung dipilih/dibuat di bawah ini: datanya sama dengan halaman detail insiden, jadi yang diisi di sini tampil di sana, dan sebaliknya. Lengkapi bagian investigasi, lalu unduh sebagai Word.</p>
 <div class="row" style="margin:0"><button class="pri" onclick="lapDocx('${i.id}',0)">⬇ Unduh Word (.docx)</button><button onclick="lapSave('${i.id}')">💾 Simpan draf</button>${can("upInv",i.co)?`<button onclick="lapDocx('${i.id}',1)">☁ Unduh + arsipkan ke Drive</button>`:""}</div></div>
 <div class="card"><h4 class="sec">1. Biodata (otomatis dari resume insiden)</h4><div class="f dl">${[["Hari/Tanggal",tglID(i.date)],["Waktu",i.time],["Shift",(i.shift==1?"Siang":i.shift==2?"Malam":"")+" · hari ke-"+(i.day||"-")],["Peralatan/Fasilitas",i.unit],["Lokasi",i.loc],["Perusahaan",i.co],["Departemen",i.dept]].map(([a,b])=>`<div><span class="mu">${a}</span><br>${esc(b)||"-"}</div>`).join("")}</div>
-${persTbl(i)}<div class="f" style="margin-top:10px"><div><label>Tanggal pelaporan</label><input type="date" data-p="tglLaporan" value="${esc(LD.tglLaporan)}" onchange="lapSet(this)"></div><div><label>Atasan langsung</label>${lapIn("atasan",LD.atasan)}</div><div><label>RS/Puskesmas/Poliklinik rujukan</label>${lapIn("rs",LD.rs)}</div><div><label>Dokter yang merawat</label>${lapIn("dokter",LD.dokter)}</div>
-<div><label>Kejadian berbahaya?</label>${lapSel("berbahaya",LD.berbahaya,["Tidak","Ya"])}</div><div><label>Kecelakaan tambang?</label>${lapSel("kecTambang",LD.kecTambang,["Tidak","Ya"])}</div><div><label>Sebutkan bila "Kejadian Lain"</label>${lapIn("jenisLain",LD.jenisLain)}</div></div></div>
+${persTbl(i)}<div class="f" style="margin-top:10px"><div><label>Tanggal pelaporan</label><input type="date" data-p="tglLaporan" value="${esc(LD.tglLaporan)}" onchange="lapSet(this)"></div><div><label>RS/Puskesmas/Poliklinik rujukan</label>${lapIn("rs",LD.rs)}</div><div><label>Dokter yang merawat</label>${lapIn("dokter",LD.dokter)}</div>
+<div><label>Kejadian berbahaya?</label>${lapSel("berbahaya",LD.berbahaya,["Tidak","Ya"])}</div><div><label>Kecelakaan tambang?</label>${lapSel("kecTambang",LD.kecTambang,["Tidak","Ya"])}</div><div><label>Sebutkan bila "Kejadian Lain"</label>${lapIn("jenisLain",LD.jenisLain)}</div></div>${lapTbl("Atasan langsung yang terlibat",["Nama atasan","Atasan dari"],"atasanList",[["nama","Nama atasan langsung"],["untuk","",pn]],{nama:"",untuk:"Semua pihak"})}${lapTbl("Peralatan/fasilitas yang terlibat",["Unit / fasilitas","Keterangan","Pengguna / pemilik"],"unitList",[["unit","Nama / kode unit"],["ket","",UKET],["pengguna","Operator / pemilik unit"]],{unit:"",ket:UKET[0],pengguna:""})}<p class="mu" style="margin:8px 0 0">Satu baris per atasan dan per unit. Pada “Keterangan”, pilih unit yang dipakai pihak terlibat atau unit lain yang terkena dampak.</p></div>
 <div class="card">${lapTbl("5. Rincian kerusakan peralatan",["Nama komponen alat/fasilitas","Hari hilang","Perkiraan biaya"],"rusakAlat",[["nama"],["hari"],["biaya"]],{nama:"",hari:"",biaya:""})}
 <h4 class="sec">Rincian kerusakan lingkungan</h4>${lapTa("rusakLingk",LD.rusakLingk,2)}</div>
 <div class="card">${lapTbl("6. Kronologi kejadian",["Sudut pandang","Fase","Tanggal","Waktu","Uraian kronologi"],"kronologi",[["sudut","",sdp],["fase","",FASE],["tgl","cth. 2026-03-13"],["waktu","cth. 19.00"],["uraian","Tulis uraian kronologi selengkapnya…"]],{tgl:"",waktu:"",uraian:"",fase:"Sebelum Kejadian",sudut:"Umum"},{fit:1,w:[165,150,125,85],ta:[4],rows:3,inh:["fase","sudut"],mw:920})}<p class="mu" style="margin:8px 0 0">Untuk kronologi dari sudut pandang orang yang terlibat: tambah baris, lalu pilih namanya di kolom “Sudut pandang” (nama diambil dari resume insiden). Di dokumen Word, tiap sudut pandang menjadi tabel kronologi tersendiri; “Umum” tampil lebih dulu.</p></div>
@@ -697,13 +697,22 @@ C.push(par([T("No. Laporan: ",{s:18}),T(i.ir||"-",{b:1,s:18})],{sp:60}));
 C.push(H(1,"Biodata"));
 C.push(tbl([bd4("Hari/Tanggal Kejadian",tglID(i.date)||"-","Waktu Kejadian",(i.time||"-")+" WIB"),
 bd4("Shift",(i.shift==1?"Siang":i.shift==2?"Malam":"-")+(i.day?", hari ke-"+i.day:""),"Tanggal Pelaporan",tglID(D.tglLaporan)||"-"),
-bd4("Peralatan/Fasilitas yang Terlibat",i.unit||"-","Lokasi Kejadian",i.loc||"-"),
-bd4("Departemen/Divisi",i.dept||"-","Perusahaan",i.co||"-"),
-bd4("Atasan Langsung",D.atasan||"-","Jumlah Orang Terlibat",P.length+" orang")],[24,26,24,26]));
+bd4("Lokasi Kejadian",i.loc||"-","Departemen/Divisi",i.dept||"-"),
+bd4("Perusahaan",i.co||"-","Jumlah Orang Terlibat",P.length+" orang")],[24,26,24,26]));
 C.push(gap());
 C.push(tbl([row([hd("Karyawan yang Terlibat Kejadian",{cs:6,a:AlignmentType.LEFT})],{ns:1}),
 row(["No","Nama","ID No","Jabatan","Umur","Masa Kerja"].map((h,k)=>hd(h,{w:[6,28,17,23,12,14][k]})),{ns:1}),
 ...P.map((p,n)=>row([cell(n+1,{a:AlignmentType.CENTER}),cell(p.name||"-"),cell(p.nik||"-",{a:AlignmentType.CENTER}),cell(p.pos||"-"),cell(p.age||"-",{a:AlignmentType.CENTER}),cell(p.hired||"-",{a:AlignmentType.CENTER})],{ns:1}))],[6,28,17,23,12,14]));
+C.push(gap());
+const AT=(D.atasanList||[]).filter(r=>String(r.nama||"").trim());
+C.push(tbl([row([hd("Atasan Langsung yang Terlibat",{cs:3,a:AlignmentType.LEFT})],{ns:1}),
+row(["No","Nama Atasan","Atasan dari"].map((h,k)=>hd(h,{w:[6,50,44][k]})),{ns:1}),
+...(AT.length?AT.map((r,n)=>row([cell(n+1,{a:AlignmentType.CENTER}),cell(r.nama),cell(r.untuk||"Semua pihak")],{ns:1})):[row([cell("-",{a:AlignmentType.CENTER}),cell("-"),cell("-")],{ns:1})])],[6,50,44]));
+C.push(gap());
+const UN=(D.unitList||[]).filter(r=>String(r.unit||"").trim());
+C.push(tbl([row([hd("Peralatan/Fasilitas yang Terlibat",{cs:4,a:AlignmentType.LEFT})],{ns:1}),
+row(["No","Unit / Fasilitas","Keterangan","Pengguna / Pemilik"].map((h,k)=>hd(h,{w:[6,28,36,30][k]})),{ns:1}),
+...(UN.length?UN.map((r,n)=>row([cell(n+1,{a:AlignmentType.CENTER}),cell(r.unit),cell(r.ket||UKET[0]),cell(r.pengguna||"-")],{ns:1})):[row([cell("-",{a:AlignmentType.CENTER}),cell("-"),cell("-"),cell("-")],{ns:1})])],[6,28,36,30]));
 C.push(H(2,"Jenis Kejadian/Kecelakaan"));
 const JEN=[["Kematian","Fatality",12],["Cedera","Injury",11],["Kerusakan Peralatan","Property Damage",17],["Lingkungan","Environment",12],["Hampir Celaka","Near Miss",12],["Kejadian Lain",D.jenisLain?"Others: "+D.jenisLain:"Others……………",12]];
 C.push(tbl([row(JEN.flatMap((j,k)=>[cell("",{w:4,ch:[new Paragraph({alignment:AlignmentType.CENTER,children:[cbT(k==jHit||(jHit<0&&k==5),26)]})]}),cell("",{w:j[2],ch:[par([T(j[0])],{sp:0}),par([T(j[1],{i:1})],{sp:0})]})]),{h:560})],[4,12,4,11,4,17,4,12,4,12,4,12]));
