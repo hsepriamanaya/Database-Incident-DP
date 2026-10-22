@@ -1,9 +1,11 @@
 <!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Portal Insiden & RTP - PT Dizamatra Powerindo · v4</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
-<link rel="icon" href="https://lh3.googleusercontent.com/u/0/d/1OJofc87kqWPXwHzUr2YJqJeeSnfvmII6">
+<link rel="icon" href="https://lh3.googleusercontent.com/u/0/d/1b36wR77FtcG1DPF_YGHTyJQ0B84td3_N">
 <script>/* Logo: bila tautan utama gagal dimuat, coba tautan cadangan, lalu tampilkan inisial "DP" */
 const LOGO_ALT=["https://lh3.googleusercontent.com/d/1OJofc87kqWPXwHzUr2YJqJeeSnfvmII6","https://drive.google.com/thumbnail?id=1OJofc87kqWPXwHzUr2YJqJeeSnfvmII6&sz=w400"];
+const MINI_ALT=["https://lh3.googleusercontent.com/d/1b36wR77FtcG1DPF_YGHTyJQ0B84td3_N","https://drive.google.com/thumbnail?id=1b36wR77FtcG1DPF_YGHTyJQ0B84td3_N&sz=w200"];
+function miniFail(im){const n=+(im.dataset.n||0);if(n<MINI_ALT.length){im.dataset.n=n+1;im.src=MINI_ALT[n]}else im.parentElement.classList.add("nomini")}
 function logoFail(im){const n=+(im.dataset.n||0);if(n<LOGO_ALT.length){im.dataset.n=n+1;im.src=LOGO_ALT[n]}else im.parentElement.classList.add("nologo")}</script>
 <style>
 :root{--bg:#f6f7f9;--card:#fff;--tx:#1b2430;--mu:#667085;--bd:#e3e6eb;--pr:#c2410c;--ok:#16a34a;--wa:#d97706;--er:#dc2626;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -167,6 +169,7 @@ th .sa{margin-left:4px;font-size:10px}
 
 /* ===== Panel navigasi bisa disembunyikan (desktop) ===== */
 #side{transition:width .2s ease}
+.logo-mini{display:none;max-width:100%;max-height:36px;width:auto;height:auto;object-fit:contain}
 #sbt{position:fixed;top:20px;left:239px;z-index:7;width:24px;height:24px;padding:0;border:1px solid #ffffff33;border-radius:50%;background:var(--nav);color:#cbd5e1;cursor:pointer;display:grid;place-items:center;transition:left .2s ease,background .15s,color .15s,border-color .15s}
 #sbt svg{width:14px;height:14px;transition:transform .2s}
 #sbt:hover{background:var(--pr);border-color:var(--pr);color:#fff}
@@ -177,7 +180,7 @@ body.sc #sbt{left:56px}body.sc #sbt svg{transform:rotate(180deg)}
 body.sc .brand{padding:4px 0 12px;align-items:center}
 body.sc .brand>div:last-child{display:none}
 body.sc .logo-box{padding:4px;min-height:44px;height:44px;border-radius:10px}
-body.sc .company-logo{display:none}body.sc .logo-fb{display:block;font-size:15px}
+body.sc .company-logo,body.sc .logo-fb{display:none}body.sc .logo-mini{display:block}body.sc .logo-box.nomini .logo-fb{display:block;font-size:15px}body.sc .logo-box.nomini .logo-mini{display:none}
 body.sc #nav button{justify-content:center;padding:11px 0;position:relative}
 body.sc #nav button .l{display:none}
 body.sc #nav button:hover::after{content:attr(data-t);position:absolute;left:calc(100% + 14px);top:50%;transform:translateY(-50%);background:#0f172a;color:#fff;font-size:12px;padding:5px 9px;border-radius:6px;white-space:nowrap;pointer-events:none;box-shadow:0 4px 12px #0004;z-index:30}
@@ -203,7 +206,7 @@ table.acc td{vertical-align:middle}
 [data-dz].dzon{outline:2px dashed var(--pr);outline-offset:-3px;background:color-mix(in srgb,var(--pr) 12%,var(--card))!important}
 </style>
 </head><body>
-<button id="sbt" type="button" onclick="togSide()" aria-label="Sembunyikan/tampilkan panel navigasi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><div id="shell"><aside id="side"><div class="brand"><div class="logo-box"><img class="company-logo" src="https://lh3.googleusercontent.com/u/0/d/1OJofc87kqWPXwHzUr2YJqJeeSnfvmII6" alt="Logo PT Dizamatra Powerindo" referrerpolicy="no-referrer" decoding="async" onerror="logoFail(this)"><span class="logo-fb">DP</span></div><div><b>Portal Rekapitulasi Insiden & Monitoring RTP</b><small>PT. Dizamatra Powerindo – Lahat</small></div></div><nav id="nav"></nav><div id="usr"></div></aside><main id="app"></main></div><div id="st" onclick="flush()"></div><div id="lb" onclick="this.style.display='none'"><img id="lbi"></div>
+<button id="sbt" type="button" onclick="togSide()" aria-label="Sembunyikan/tampilkan panel navigasi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><div id="shell"><aside id="side"><div class="brand"><div class="logo-box"><img class="company-logo" src="https://lh3.googleusercontent.com/u/0/d/1OJofc87kqWPXwHzUr2YJqJeeSnfvmII6" alt="Logo PT Dizamatra Powerindo" referrerpolicy="no-referrer" decoding="async" onerror="logoFail(this)"><span class="logo-fb">DP</span><img class="logo-mini" src="https://lh3.googleusercontent.com/u/0/d/1b36wR77FtcG1DPF_YGHTyJQ0B84td3_N" alt="Logo Diza" referrerpolicy="no-referrer" decoding="async" onerror="miniFail(this)"></div><div><b>Portal Rekapitulasi Insiden & Monitoring RTP</b><small>PT. Dizamatra Powerindo – Lahat</small></div></div><nav id="nav"></nav><div id="usr"></div></aside><main id="app"></main></div><div id="st" onclick="flush()"></div><div id="lb" onclick="this.style.display='none'"><img id="lbi"></div>
 <script>
 const RC=[["Pelaksanaan Prosedur/Kebijakan","UA"],["Penggunaan Peralatan","UA"],["Metode Perlindungan (APD)","UA"],["Tidak Memperhatikan/Menyadari","UA"],["Sistem Pengaman Tidak Memadai","UC"],["Perkakas/Peralatan Tidak Aman","UC"],["Pemaparan Kondisi Kesehatan","UC"],["Lingkungan Kerja Tidak Aman","UC"],["Ketidakmampuan Fisik","HF"],["Stress Fisik","HF"],["Ketidakmampuan Mental","HF"],["Stress Mental","HF"],["Tingkat Keterampilan","HF"],["Perilaku/Kurang Motivasi","HF"],["Kurang Pelatihan","JF"],["Supervisi Tidak Memadai","JF"],["Seleksi & Pengawasan Kontraktor","JF"],["Rekayasa Desain","JF"],["Rencana Pemeliharaan","JF"],["Pembelian & Kendali Bahan","JF"],["Perkakas/Peralatan Tidak Memadai","JF"],["Peraturan/Prosedur Kerja","JF"],["Komunikasi Tidak Memadai","JF"]];
 const GRP={UA:"Tindakan Tidak Aman",UC:"Kondisi Tidak Aman",HF:"Faktor Manusia",JF:"Faktor Pekerjaan"};
