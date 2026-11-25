@@ -205,7 +205,44 @@ table.acc td.grp{background:var(--bg);font-weight:700;color:var(--pr);padding:9p
 table.acc td{vertical-align:middle}
 [data-dz].dzon{outline:2px dashed var(--pr);outline-offset:-3px;background:color-mix(in srgb,var(--pr) 12%,var(--card))!important}
 </style>
-</head><body>
+<style id="ux">
+/* ===== UX: tema gelap/terang, transisi halus, indikator loading ===== */
+:root[data-theme=dark]{--bg:#0b1220;--card:#131c2e;--tx:#e6ebf3;--mu:#94a3b8;--bd:#25324a;--pr:#fb923c;--nav:#070d19;--nav2:#101a30;color-scheme:dark}
+:root[data-theme=light]{color-scheme:light}
+html.thx *,html.thx *::before,html.thx *::after{transition:background-color .35s ease,color .35s ease,border-color .35s ease,fill .35s ease,stroke .35s ease,box-shadow .35s ease!important}
+button,.tag,.card,.ic,tr.cl,input,select,textarea,#nav button,.kpi{transition:background-color .18s ease,border-color .18s ease,color .18s ease,box-shadow .2s ease,transform .18s ease,opacity .18s ease}
+button:not(:disabled):active{transform:scale(.97)}
+button:disabled{opacity:.6;cursor:not-allowed}
+.ic:hover{box-shadow:0 6px 16px #0f172a1f;transform:translateY(-1px)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--pr);box-shadow:0 0 0 3px color-mix(in srgb,var(--pr) 22%,transparent)}
+button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--pr);outline-offset:2px}
+@keyframes pgIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+#app.pg>*{animation:pgIn .34s cubic-bezier(.2,.7,.2,1) both}
+#app.pg>*:nth-child(2){animation-delay:.04s}#app.pg>*:nth-child(3){animation-delay:.08s}#app.pg>*:nth-child(4){animation-delay:.12s}#app.pg>*:nth-child(n+5){animation-delay:.16s}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sp{width:14px;height:14px;border:2px solid var(--bd);border-top-color:var(--pr);border-radius:50%;display:inline-block;vertical-align:-2px;animation:spin .7s linear infinite;flex:none}
+#bar{position:fixed;left:0;right:0;top:0;height:3px;z-index:60;pointer-events:none;opacity:0;overflow:hidden;transition:opacity .25s ease}
+#bar.on{opacity:1}
+#bar::after{content:"";position:absolute;top:0;bottom:0;left:0;width:40%;background:linear-gradient(90deg,transparent,var(--pr),transparent);animation:barmv 1.1s ease-in-out infinite}
+@keyframes barmv{from{transform:translateX(-100%)}to{transform:translateX(250%)}}
+#busy{position:fixed;top:12px;left:50%;z-index:60;display:flex;align-items:center;gap:8px;max-width:calc(100vw - 24px);padding:6px 14px 6px 10px;border-radius:999px;background:var(--card);color:var(--tx);border:1px solid var(--bd);box-shadow:0 6px 20px #0f172a26;font-size:13px;pointer-events:none;opacity:0;transform:translate(-50%,-14px);transition:opacity .22s ease,transform .22s ease}
+#busy.on{opacity:1;transform:translate(-50%,0)}
+@keyframes stIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+#st{animation:stIn .2s ease}#st .sp{margin-right:6px}
+.pgb{height:4px;border-radius:4px;background:var(--bd);margin-top:6px;overflow:hidden}.pgb i{display:block;height:100%;background:var(--pr);border-radius:4px;transition:width .3s ease}
+body.blk main button.pri{pointer-events:none;opacity:.7}
+body.blk main button.pri:focus::after{content:"";width:12px;height:12px;margin-left:8px;border:2px solid #fff6;border-top-color:#fff;border-radius:50%;display:inline-block;vertical-align:-2px;animation:spin .7s linear infinite}
+.sk{display:grid;gap:12px}.sk i{display:block;height:86px;border-radius:12px;background:linear-gradient(90deg,var(--bd) 0,var(--card) 40%,var(--bd) 80%);background-size:200% 100%;animation:shim 1.3s linear infinite}.sk i:first-child{height:34px;width:46%}
+@keyframes shim{from{background-position:200% 0}to{background-position:-200% 0}}
+#usr .thb{width:30px;height:30px;padding:0;border-radius:50%;display:grid;place-items:center;align-self:flex-end;order:-1;background:transparent;color:#cbd5e1;border:1px solid #ffffff30}
+#usr .thb:hover{background:var(--nav2);color:#fff}
+#usr .thb svg{width:16px;height:16px;transition:transform .45s ease}#usr .thb:hover svg{transform:rotate(30deg)}
+body.sc #usr .thb{align-self:center}
+@media(max-width:860px){#usr .thb{width:34px;height:34px;align-self:auto;order:0}#busy{top:calc(8px + env(safe-area-inset-top,0px))}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+</style>
+<script>try{var _t=localStorage.getItem("th");if(_t==="dark"||_t==="light")document.documentElement.dataset.theme=_t}catch(e){}</script>
+</head><body><div id="bar"></div><div id="busy" role="status" aria-live="polite"></div>
 <button id="sbt" type="button" onclick="togSide()" aria-label="Sembunyikan/tampilkan panel navigasi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><div id="shell"><aside id="side"><div class="brand"><div class="logo-box"><img class="company-logo" src="https://lh3.googleusercontent.com/u/0/d/1OJofc87kqWPXwHzUr2YJqJeeSnfvmII6" alt="Logo PT Dizamatra Powerindo" referrerpolicy="no-referrer" decoding="async" onerror="logoFail(this)"><span class="logo-fb">DP</span><img class="logo-mini" src="https://lh3.googleusercontent.com/u/0/d/1b36wR77FtcG1DPF_YGHTyJQ0B84td3_N" alt="Logo Diza" referrerpolicy="no-referrer" decoding="async" onerror="miniFail(this)"></div><div><b>Portal Rekapitulasi Insiden & Monitoring RTP</b><small id="sbSub">PT. Dizamatra Powerindo</small></div></div><nav id="nav"></nav><div id="usr"></div></aside><main id="app"></main></div><div id="st" onclick="flush()"></div><div id="lb" onclick="this.style.display='none'"><img id="lbi"></div>
 <script>
 const RC=[["Pelaksanaan Prosedur/Kebijakan","UA"],["Penggunaan Peralatan","UA"],["Metode Perlindungan (APD)","UA"],["Tidak Memperhatikan/Menyadari","UA"],["Sistem Pengaman Tidak Memadai","UC"],["Perkakas/Peralatan Tidak Aman","UC"],["Pemaparan Kondisi Kesehatan","UC"],["Lingkungan Kerja Tidak Aman","UC"],["Ketidakmampuan Fisik","HF"],["Stress Fisik","HF"],["Ketidakmampuan Mental","HF"],["Stress Mental","HF"],["Tingkat Keterampilan","HF"],["Perilaku/Kurang Motivasi","HF"],["Kurang Pelatihan","JF"],["Supervisi Tidak Memadai","JF"],["Seleksi & Pengawasan Kontraktor","JF"],["Rekayasa Desain","JF"],["Rencana Pemeliharaan","JF"],["Pembelian & Kendali Bahan","JF"],["Perkakas/Peralatan Tidak Memadai","JF"],["Peraturan/Prosedur Kerja","JF"],["Komunikasi Tidak Memadai","JF"]];
@@ -316,7 +353,7 @@ let V={p:"dash",id:null,q:"",pm:"both",xo:false,ms:"",rq:"",so:"urgent",ds:"desc
 const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const cnt=(a,f)=>{const m={};a.forEach(x=>{const k=f(x);if(k)m[k]=(m[k]||0)+1});return Object.entries(m).sort((a,b)=>b[1]-a[1])};
 const rp=i=>S.rtp.filter(r=>r.incId===i), idr=n=>n.toLocaleString("id-ID");
-function go(p,id){if(V.p=="lap"&&LAT)lapAutoNow();V.p=p;if(p=="form")V.ed=null;if(id!==undefined)V.id=id;render();scrollTo(0,0)}
+let ANIM=1;function go(p,id){if(V.p=="lap"&&LAT)lapAutoNow();ANIM=1;V.p=p;if(p=="form")V.ed=null;if(id!==undefined)V.id=id;render();scrollTo(0,0)}
 const pct=(n,t)=>(t?n/t*100:0).toFixed(1).replace(/\.0$/,"").replace(".",",")+"%";
 const idrs=n=>n>=1e9?(n/1e9).toFixed(2).replace(".",",")+" M":n>=1e6?(n/1e6).toFixed(1).replace(".",",")+" jt":idr(n);
 function wrap(s,n){s=String(s);if(s.length<=n)return s;const o=[];let l="";s.split(" ").forEach(w=>{if(l&&(l+" "+w).length>n){o.push(l);l=w}else l=l?l+" "+w:w});if(l)o.push(l);return o.length>1?o:o[0]}
@@ -480,7 +517,13 @@ const API_URL="https://script.google.com/macros/s/AKfycbzGzLNBM9Vp8AABYMtpvY9TT8
 /* ===== Koneksi ke Apps Script ===== */
 let S={inc:[],rtp:[]},ME=null,TOKEN=sessionStorage.getItem("tk")||"",SNAP={};
 const TH=(id,w)=>`https://drive.google.com/thumbnail?id=${id}&sz=w${w}`;
-async function api(action,data){let r;try{r=JSON.parse(await(await fetch(API_URL,{method:"POST",body:JSON.stringify({action,token:TOKEN,data})})).text())}catch(e){throw Object.assign(new Error("Tidak bisa terhubung ke server (koneksi putus, atau Apps Script mengembalikan error – cek menu Executions)"),{net:1})}
+const LBL={getAll:"Memuat data…",login:"Memeriksa akun…",saveInc:"Menyimpan data…",saveRtp:"Menyimpan RTP…",delRtp:"Menghapus RTP…",upload:"Mengunggah file…",uploadInit:"Menyiapkan unggahan…",uploadChunk:"Mengunggah file…",listUsers:"Memuat akun…",saveUser:"Menyimpan akun…",delUser:"Menghapus akun…",savePerm:"Menyimpan pengaturan…"},QUIET=new Set(["saveInc","saveRtp","delRtp"]),LOCK=new Set(["login","saveUser","delUser","savePerm","listUsers","upload","uploadInit","uploadChunk"]);
+let BUSY=0,BLK=0,BT=null,BL="";
+/* indikator proses: bar tipis di atas untuk semua panggilan; chip berlabel untuk proses yang ditunggu pengguna; tombol utama dikunci saat proses penting berjalan */
+function busy(d,label,chip,lock){BUSY+=d;if(lock)BLK+=d;if(d>0&&chip)BL=label;document.body.classList.toggle("blk",BLK>0);clearTimeout(BT);const bar=$("#bar"),bz=$("#busy");
+if(BUSY>0){BT=setTimeout(()=>{bar.classList.add("on");if(BL){bz.innerHTML='<i class="sp"></i>'+esc(BL);bz.classList.add("on")}},d>0?150:0)}else{BL="";bar.classList.remove("on");bz.classList.remove("on")}}
+async function api(action,data){busy(1,LBL[action]||"Memproses…",!QUIET.has(action),LOCK.has(action));try{return await api0(action,data)}finally{busy(-1,"",0,LOCK.has(action))}}
+async function api0(action,data){let r;try{r=JSON.parse(await(await fetch(API_URL,{method:"POST",body:JSON.stringify({action,token:TOKEN,data})})).text())}catch(e){throw Object.assign(new Error("Tidak bisa terhubung ke server (koneksi putus, atau Apps Script mengembalikan error – cek menu Executions)"),{net:1})}
 if(!r.ok){if(r.error=="AUTH"){TOKEN="";sessionStorage.removeItem("tk");ME=null;setTimeout(()=>{alert("Sesi login berakhir. Silakan masuk kembali.");V.p="login";start()},0)}throw new Error(r.error)}if(r.user)ME=r.user;return r.data}
 const snap=()=>{SNAP={};[...S.inc,...S.rtp].forEach(x=>SNAP[x.id]=JSON.stringify(x))};
 /* ===== Unggah file (kecil langsung, besar bertahap per 2 MB, maks. 100 MB) ===== */
@@ -562,7 +605,7 @@ ogp(i=>String(i.inMess).toUpperCase()=="Y"?"Inside Mess":String(i.outMess).toUpp
 /* ===== Penyimpanan: antrean berurutan + coba ulang otomatis ===== */
 let Q=Promise.resolve(),T;const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const enq=fn=>{const p=Q.then(async()=>{for(let k=0;;k++){try{return await fn()}catch(e){if(!e.net||k>=2)throw e;await sleep(1500*(k+1))}}});Q=p.catch(()=>{});return p};
-function st(m,bad){const e=$("#st");e.textContent=m;e.className=bad?"bad":"";e.style.display=m?"block":"none"}
+function st(m,bad){const e=$("#st"),pc=(String(m).match(/(\d+)%$/)||[])[1];e.innerHTML=(!bad&&(/…$/.test(m)||pc)?'<i class="sp"></i>':"")+esc(m)+(pc?`<div class="pgb"><i style="width:${pc}%"></i></div>`:"");e.className=bad?"bad":"";e.style.display=m?"block":"none"}
 function save(){clearTimeout(T);st("Menyimpan…");T=setTimeout(flush,700)}
 function flush(){T=0;const jobs=[];
 S.inc.forEach(i=>{const j=JSON.stringify(i);if(SNAP[i.id]!=j)jobs.push(["saveInc",i,i.id,j])});
@@ -678,8 +721,9 @@ document.addEventListener("input",e=>{const el=e.target;if(V.p=="lap"&&LD&&el.da
 document.addEventListener("change",e=>{const el=e.target;if(V.p=="lap"&&LD&&el.dataset&&el.dataset.p){lapSet(el);lapAuto()}});
 window.addEventListener("beforeunload",e=>{if(LAT)lapAutoNow();let p=!!T;try{p=p||S.inc.some(i=>SNAP[i.id]!=JSON.stringify(i))}catch(x){}if(p){flush();e.preventDefault();e.returnValue=""}});
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&V.p=="lap"&&LAT)lapAutoNow()});
-async function lapDocx(id,toDrive){if(!window.docx){alert("Pustaka Word (docx.js) belum termuat. Periksa koneksi internet, lalu muat ulang halaman.");return}
-const i=S.inc.find(x=>x.id==id);if(!i)return;{const miss=[!i.rc.length&&"Root cause",!rp(i.id).length&&"RTP"].filter(Boolean);if(miss.length&&!confirm(miss.join(" dan ")+" belum diisi, jadi bagian itu akan kosong di dokumen. Tetap lanjutkan?"))return}const P=pp(i),P0=P[0]||{},D=LD;st("Menyusun dokumen Word…");
+let DXB=0;async function lapDocx(id,toDrive){if(DXB)return;DXB=1;busy(1,"Menyusun dokumen Word…",1,1);try{await lapDocx0(id,toDrive)}finally{DXB=0;busy(-1,"",0,1)}}
+async function lapDocx0(id,toDrive){if(!window.docx){alert("Pustaka Word (docx.js) belum termuat. Periksa koneksi internet, lalu muat ulang halaman.");return}
+const i=S.inc.find(x=>x.id==id);if(!i)return;{const miss=[!i.rc.length&&"Root cause",!rp(i.id).length&&"RTP"].filter(Boolean);if(miss.length&&!confirm(miss.join(" dan ")+" belum diisi, jadi bagian itu akan kosong di dokumen. Tetap lanjutkan?"))return}const P=pp(i),P0=P[0]||{},D=LD;st("Menyusun dokumen Word…");await new Promise(r=>requestAnimationFrame(()=>setTimeout(r,30)));
 try{
 const {Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,WidthType,AlignmentType,ImageRun,BorderStyle,VerticalAlign,Header,Footer,PageNumber,ShadingType,HeightRule,Tab,TextDirection,TableLayoutType,TabStopType,LeaderType}=docx;
 const BD={style:BorderStyle.SINGLE,size:2,color:"808080"},BR={top:BD,bottom:BD,left:BD,right:BD},NB={style:BorderStyle.NONE,size:0},NBR={top:NB,bottom:NB,left:NB,right:NB};
@@ -894,21 +938,26 @@ lapCommit(i);
 if(toDrive){st("Mengarsipkan ke Drive…");try{const f=new File([blob],nama,{type:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});const r=await upFile(f,{incId:i.id});i.invReport=i.invReport||[];i.invReport.push(r);save();st("Diunduh & diarsipkan ke Drive ✓")}catch(e){st("Gagal arsip ke Drive: "+e.message+" — klik di sini untuk coba lagi",1)}return}
 st("")}catch(e){st("");alert("Gagal menyusun dokumen: "+e.message)}}
 /* ===== Login, navigasi, render ===== */
-async function start(){$("#app").innerHTML='<p class="mu">Memuat data…</p>';try{S=await api("getAll");PERM=S.perm||PERM_DEF;PD=null;S.inc.forEach(i=>{if(!i.mon&&i.date)i.mon=MON[+i.date.slice(5,7)-1]||"";if(i.dept=="HR & GA")i.dept="HRGA";if(!Array.isArray(i.others))i.others=[]});snap();if(!V.yi){V.yi=1;V.y=years()[0]?[years()[0]]:[]}render()}catch(e){if(e.message!="AUTH")$("#app").innerHTML='<div class="card">'+esc(e.message=="FORBIDDEN"?"Email Anda belum terdaftar di portal. Hubungi admin HSE.":e.message)+'</div>'}}
+const skel=()=>'<div class="sk"><i></i><i></i><i></i><i></i></div>';
+async function start(){ANIM=1;$("#app").innerHTML=skel();try{S=await api("getAll");PERM=S.perm||PERM_DEF;PD=null;S.inc.forEach(i=>{if(!i.mon&&i.date)i.mon=MON[+i.date.slice(5,7)-1]||"";if(i.dept=="HR & GA")i.dept="HRGA";if(!Array.isArray(i.others))i.others=[]});snap();if(!V.yi){V.yi=1;V.y=years()[0]?[years()[0]]:[]}render()}catch(e){if(e.message!="AUTH")$("#app").innerHTML='<div class="card">'+esc(e.message=="FORBIDDEN"?"Email Anda belum terdaftar di portal. Hubungi admin HSE.":e.message)+'</div>'}}
 
 /* ===== Login manual (username & password), navigasi, tampilan ===== */
 const ICO={usr:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',acc:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',dash:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',list:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',form:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',rca:'<circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M6 9v3a3 3 0 0 0 3 3h6"/>',rtp:'<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>'};
+const thNow=()=>document.documentElement.dataset.theme||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");
+const thIco=()=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${thNow()=="dark"?'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>':'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>'}</svg>`;
+const thBtn=()=>`<button id="thb" class="thb" type="button" onclick="togTheme()" title="${thNow()=="dark"?"Ganti ke tema terang":"Ganti ke tema gelap"}" aria-label="Ganti tema gelap/terang">${thIco()}</button>`;
+function togTheme(){const h=document.documentElement,n=thNow()=="dark"?"light":"dark";h.classList.add("thx");h.dataset.theme=n;try{localStorage.setItem("th",n)}catch(e){}setTimeout(()=>h.classList.remove("thx"),450);theme();const b=$("#thb");if(b)b.outerHTML=thBtn();if(V.p=="dash"||V.p=="rca")render()}
 function nav(){const a=ME&&(ME.role=="admin"||lvl("addInc")!="off"),t=[["dash","Dashboard","Dashboard"],["list","Data Insiden","Data"],...(a?[["form","Input Resume","Input"]]:[]),["rca","Root Cause","Root Cause"],["rtp","RTP & Bukti","RTP"],...(ME&&ME.role=="admin"?[...(ME.site?[]:[["acc","Pengaturan Akses","Akses"]]),["usr","Kelola Akun","Akun"]]:[])],sv=p=>`<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
 $("#nav").innerHTML=t.map(([k,l,s])=>`<button class="${V.p==k||(k=="list"&&V.p=="detail")?"on":""}" title="${l}" data-t="${l}" onclick="go('${k}')">${sv(ICO[k])}<span class="l">${l}</span><span class="s">${s}</span></button>`).join("");
 const pub=!ME||ME.role=="public";{const e=document.getElementById("sbSub");if(e)e.textContent="PT. Dizamatra Powerindo – "+(ME&&ME.role!="public"&&ME.site?SN(ME.site):"Lahat & Patratani")}
-$("#usr").innerHTML=pub?`<div class="who"><b>Mode Publik</b><span class="mu">${lvl("dlFile")!="off"?"Hanya lihat & unduh":"Hanya lihat"}</span></div><button class="pri ub" onclick="go('login')" aria-label="Masuk petugas" title="Masuk petugas"><span class="ubt">Masuk petugas</span>${sv('<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>')}</button>`:`<div class="who"><b>${esc(ME.nama)}</b><span class="tag">${esc(ME.role)}${ME.role=="admin"?(ME.site?" · "+esc(SN(ME.site)):" · semua site"):""}</span>${ME.role=="pic"?`<span class="mu">${esc(ME.company||"⚠ perusahaan belum diatur")}</span>`:""}<span class="mu" style="font-size:10px">build 24Nov-M${ME.role=="pic"?" · tambahRTP="+lvl("rtpAdd"):""}</span></div><span class="av" title="${esc(ME.nama)}">${esc(String(ME.nama||"?").trim().charAt(0).toUpperCase())}</span><button class="ub" onclick="logout()" aria-label="Keluar" title="Keluar"><span class="ubt">Keluar</span>${sv('<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>')}</button>`}
+$("#usr").innerHTML=thBtn()+(pub?`<div class="who"><b>Mode Publik</b><span class="mu">${lvl("dlFile")!="off"?"Hanya lihat & unduh":"Hanya lihat"}</span></div><button class="pri ub" onclick="go('login')" aria-label="Masuk petugas" title="Masuk petugas"><span class="ubt">Masuk petugas</span>${sv('<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>')}</button>`:`<div class="who"><b>${esc(ME.nama)}</b><span class="tag">${esc(ME.role)}${ME.role=="admin"?(ME.site?" · "+esc(SN(ME.site)):" · semua site"):""}</span>${ME.role=="pic"?`<span class="mu">${esc(ME.company||"⚠ perusahaan belum diatur")}</span>`:""}<span class="mu" style="font-size:10px">build 25Nov-N${ME.role=="pic"?" · tambahRTP="+lvl("rtpAdd"):""}</span></div><span class="av" title="${esc(ME.nama)}">${esc(String(ME.nama||"?").trim().charAt(0).toUpperCase())}</span><button class="ub" onclick="logout()" aria-label="Keluar" title="Keluar"><span class="ubt">Keluar</span>${sv('<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>')}</button>`)}
 const PT={usr:["Kelola Akun","Tambah akun, ubah peran/perusahaan, ganti password, dan nonaktifkan akun"],acc:["Pengaturan Akses","Atur fitur apa saja yang tersedia untuk mode Publik dan PIC"],dash:["Dashboard","Ringkasan insiden, tren, dan penyebab"],list:["Data Insiden","Cari dan buka rincian setiap insiden"],detail:["Detail Insiden","Resume, investigasi, root cause, dan tindak lanjut"],rca:["Analisis Root Cause","Sebaran penyebab per kategori, kelompok, dan butir rincian ICA"],rtp:["RTP & Bukti Perbaikan","Pantau progres perbaikan beserta buktinya"],lap:["Laporan Investigasi","Lengkapi hasil investigasi, lalu unduh sebagai dokumen Word sesuai format perusahaan"]};
 function render(){CH.forEach(c=>c.destroy());CH=[];theme();nav();if(V.p=="form"&&ME&&ME.role!="admin"&&lvl("addInc")=="off")V.p="dash";({dash,list,form,detail,rca,rtp:rtpAll,login:loginView,lap,acc,usr:usrP})[V.p]();
 const t=V.p=="form"?[V.ed?"Edit Resume Insiden":"Input Resume Insiden","Lengkapi data kejadian, kronologi, dan orang yang terlibat"]:PT[V.p];
 if(t)$("#app").insertAdjacentHTML("afterbegin",`<div class="ph"><h2>${t[0]}</h2><p>${t[1]}</p></div>`);
 {const bn=picBanner();if(bn){const ph=$("#app .ph");ph?ph.insertAdjacentHTML("afterend",bn):$("#app").insertAdjacentHTML("afterbegin",bn)}}
 document.body.classList.toggle("ro",ME.role!="admin"&&ME.role!="pic");
-{const ci=(V.p=="detail"||V.p=="lap")?S.inc.find(x=>x.id==V.id):null;document.querySelectorAll(".rc input").forEach(x=>x.disabled=!(ci&&picOk("rc",ci)));if(V.p=="detail")document.querySelectorAll("#icaBox input").forEach(x=>{x.disabled=!(ci&&picOk("rc",ci));if(x.disabled&&x.classList.contains("icc")&&!x.value)x.style.display="none"})}if(ME.role!="admin")document.querySelectorAll("#app form:not(.keep)").forEach(f=>{if(!(ME.role=="pic"&&V.p=="form"))f.style.display="none"})}
+{const ci=(V.p=="detail"||V.p=="lap")?S.inc.find(x=>x.id==V.id):null;document.querySelectorAll(".rc input").forEach(x=>x.disabled=!(ci&&picOk("rc",ci)));if(V.p=="detail")document.querySelectorAll("#icaBox input").forEach(x=>{x.disabled=!(ci&&picOk("rc",ci));if(x.disabled&&x.classList.contains("icc")&&!x.value)x.style.display="none"})}if(ME.role!="admin")document.querySelectorAll("#app form:not(.keep)").forEach(f=>{if(!(ME.role=="pic"&&V.p=="form"))f.style.display="none"});if(ANIM){ANIM=0;const a=$("#app");a.classList.remove("pg");void a.offsetWidth;a.classList.add("pg")}}
 function loginView(){$("#app").innerHTML=`<div class="card login"><div class="lg">🔒</div><h3>Masuk Petugas</h3><p class="mu">Khusus HSE/PIC untuk input, edit, dan unggah. Pengunjung tetap dapat melihat data tanpa masuk.</p><form class="keep" onsubmit="return doLogin(event)"><label>Username</label><input name="u" autocomplete="username" required><label style="margin-top:8px">Password</label><input name="p" type="password" autocomplete="current-password" required><div id="lerr" class="err"></div><button class="pri" style="width:100%;margin-top:8px">Masuk</button></form></div>`}
 async function doLogin(e){e.preventDefault();const f=new FormData(e.target),b=e.target.querySelector("button");b.disabled=true;
 try{const r=await api("login",{username:f.get("u"),password:f.get("p")});TOKEN=r.token;sessionStorage.setItem("tk",TOKEN);V.p="dash";await start()}catch(x){$("#lerr").textContent=x.message;b.disabled=false}return false}
@@ -957,7 +1006,7 @@ $("#app").innerHTML=`<div class="card"><p class="mu" style="margin:0">Atur fitur
 /* ===== Kelola Akun (khusus admin): tambah/ubah akun & password tanpa membuka spreadsheet ===== */
 let UM={users:null,companies:[],ed:null,msg:""};
 function usrP(){if(!ME||ME.role!="admin")return go("dash");
-if(!UM.users){$("#app").innerHTML='<p class="mu">Memuat akun…</p>';api("listUsers").then(r=>{UM.users=r.users;UM.companies=r.companies;if(V.p=="usr")render()}).catch(e=>{$("#app").innerHTML=`<div class="card"><b>Gagal memuat akun.</b><div class="mu">${esc(e.message=="Aksi tidak dikenal"?"Code.gs terbaru belum di-deploy (buat versi baru di Manage deployments).":e.message)}</div></div>`});return}
+if(!UM.users){$("#app").innerHTML=skel();api("listUsers").then(r=>{UM.users=r.users;UM.companies=r.companies;if(V.p=="usr")render()}).catch(e=>{$("#app").innerHTML=`<div class="card"><b>Gagal memuat akun.</b><div class="mu">${esc(e.message=="Aksi tidak dikenal"?"Code.gs terbaru belum di-deploy (buat versi baru di Manage deployments).":e.message)}</div></div>`});return}
 const rl={admin:"Admin",pic:"PIC"},e=UM.ed,nw=e&&e.new,sa=!!ME.site;
 const fm=e?`<div class="card" id="usrForm"><h3>${nw?"Tambah akun":"Ubah akun: "+esc(e.username)}</h3><div class="f">
 <div><label>Username</label><input id="uU" value="${esc(e.username)}" ${nw?"":"disabled"} placeholder="huruf kecil, tanpa spasi" autocomplete="off"></div>
